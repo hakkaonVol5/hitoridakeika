@@ -6,7 +6,7 @@ import { useGameStore } from '../src/store/gameStore';
 
 export default function Home() {
   const router = useRouter();
-  const { joinRoom } = useSocket();
+  const { joinRoom: joinRoomSocket } = useSocket();
   const { resetGame } = useGameStore();
 
   const [playerName, setPlayerName] = useState('');
