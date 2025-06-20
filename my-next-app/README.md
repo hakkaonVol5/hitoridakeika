@@ -1,40 +1,164 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# cordic chat
 
-## Getting Started
+制限時間内で交代しながらコードを完成させる、リアルタイム協力型の競技プログラミング体験です。
 
-First, run the development server:
+## 🎯 特徴
+
+- **鬼畜な制限時間**: 一人あたり10-12秒の極端に短い制限時間
+- **リアルタイム交代**: タイマー終了時に自動で次のプレイヤーに交代
+- **編集権限制御**: 自分の番以外はコード編集不可
+- **リアルタイム同期**: Socket.IOによるリアルタイムコード共有
+- **即座の実行・テスト**: コード実行とテストケース判定
+
+## 🚀 セットアップ
+
+### 前提条件
+
+- Node.js 16.0.0以上
+- npm または yarn
+
+### 1. 依存関係のインストール
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# クライアント（Next.js）
+npm install
+
+# サーバー（Socket.IO）
+cd server
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 環境変数の設定
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+`.env.local`ファイルを作成：
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+```env
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### 3. 開発サーバーの起動
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# ターミナル1: Socket.IOサーバー
+cd server
+npm run dev
 
-## Learn More
+# ターミナル2: Next.jsクライアント
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 4. アクセス
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+- クライアント: http://localhost:3000
+- サーバー: http://localhost:3001
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎮 遊び方
 
-## Deploy on Vercel
+1. **ルーム作成・参加**
+   - プレイヤー名を入力
+   - 「新しくルームを作成」または「ルームIDで参加」
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **ゲーム開始**
+   - 最大5人でチームを組む
+   - ランダムなプログラミング問題が出題される
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+3. **交代制コーディング**
+   - 制限時間内でコードを書く
+   - 時間切れで自動的に次のプレイヤーに交代
+   - 自分の番以外は編集不可
+
+4. **実行・テスト**
+   - 「実行」ボタンでコードをテスト
+   - 全テストケース通過でクリア
+
+## 🛠️ 技術スタック
+
+### フロントエンド
+- **Next.js 15**: Reactフレームワーク
+- **TypeScript**: 型安全性
+- **Tailwind CSS**: スタイリング
+- **Monaco Editor**: コードエディタ
+- **Zustand**: 状態管理
+- **Socket.IO Client**: リアルタイム通信
+
+### バックエンド
+- **Node.js**: サーバーランタイム
+- **Express**: Webフレームワーク
+- **Socket.IO**: リアルタイム通信
+- **CORS**: クロスオリジン対応
+
+## 📁 プロジェクト構造
+
+```
+my-next-app/
+├── src/
+│   ├── components/          # Reactコンポーネント
+│   │   ├── CodeEditor.tsx   # コードエディタ
+│   │   ├── Timer.tsx        # タイマー
+│   │   └── PlayerList.tsx   # プレイヤーリスト
+│   ├── lib/                 # ユーティリティ
+│   │   ├── socket.ts        # Socket.IO接続
+│   │   ├── codeExecutor.ts  # コード実行
+│   │   └── utils.ts         # ヘルパー関数
+│   ├── store/               # 状態管理
+│   │   └── gameStore.ts     # Zustandストア
+│   ├── types/               # 型定義
+│   │   └── game.ts          # ゲーム関連型
+│   ├── data/                # データ
+│   │   └── problems.ts      # 問題データ
+│   └── pages/               # ページ
+│       ├── index.tsx        # トップページ
+│       └── room/[roomId].tsx # ゲームルーム
+├── server/                  # Socket.IOサーバー
+│   ├── index.js             # サーバー本体
+│   └── package.json         # サーバー依存関係
+└── package.json             # クライアント依存関係
+```
+
+## 🎯 実装済み機能
+
+### MVP機能
+- ✅ ルーム作成・参加
+- ✅ リアルタイムプレイヤー管理
+- ✅ タイマー付き交代制コーディング
+- ✅ コードエディタ（Monaco Editor）
+- ✅ リアルタイムコード同期
+- ✅ コード実行・テスト機能
+- ✅ 編集権限制御
+- ✅ 基本的な問題出題
+
+### サンプル問題
+- 文字列を逆順にする
+- 配列の合計を計算
+- 最大値を探す
+
+## 🔮 今後の拡張予定
+
+- [ ] 観戦モード
+- [ ] 妨害イベント（キーボード逆転など）
+- [ ] スコアボード・ランキング
+- [ ] 問題投稿機能
+- [ ] チャット制限機能
+- [ ] より多くの問題パターン
+
+## 🐛 トラブルシューティング
+
+### Socket.IO接続エラー
+- サーバーが起動しているか確認
+- 環境変数`NEXT_PUBLIC_SOCKET_URL`が正しく設定されているか確認
+
+### コード実行エラー
+- ブラウザのコンソールでエラーを確認
+- セキュリティ設定でevalが許可されているか確認
+
+## 📝 ライセンス
+
+MIT License
+
+## 🤝 コントリビューション
+
+プルリクエストやイシューの報告を歓迎します！
+
+---
+
+**cordic chat** - 制限時間との戦い、そしてチームワークの真価を問う！
