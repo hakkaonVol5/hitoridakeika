@@ -8,9 +8,6 @@
     "start": "next start",
     "lint": "next lint"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "lucide-react": "^0.518.0",
