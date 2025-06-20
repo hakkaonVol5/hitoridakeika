@@ -15,6 +15,9 @@ export default function Home() {
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState('');
 
+  // モックモードの判定
+  const isMockMode = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_SOCKET_URL;
+
   // ゲーム開始時に状態をリセット
   useState(() => {
     resetGame();
@@ -152,6 +155,17 @@ export default function Home() {
             <li>• 全テストケース通過でクリア！</li>
           </ul>
         </div>
+
+        {/* モックモード通知 */}
+        {isMockMode && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 className="font-semibold text-yellow-800 mb-2">⚠️ モックモード</h4>
+            <p className="text-sm text-yellow-700">
+              Socket.IOサーバーが利用できないため、モックモードで動作しています。
+              リアルタイム機能は制限されますが、基本的な機能は利用できます。
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
