@@ -1,0 +1,21 @@
+{
+    "name": "onichan-team-programming-server",
+    "version": "1.0.0",
+    "description": "Socket.IO server for Onichan Team Programming",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2",
+        "socket.io": "^4.8.1",
+        "cors": "^2.8.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    }
+}
