@@ -119,37 +119,35 @@ const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResu
 
     try {
         // コードを実行可能にする
-        const factoryFunc = new Function(
-          'testCase', // 引数として受け取るもの
-          `
-          ${code}
+        const functionCode = `
+      ${code}
+      
+      function runReverseStringTest(testCase) {
+        try {
+          const result = reverseString(testCase.input);
+          const expected = testCase.expectedOutput;
+          const actual = String(result);
           
-          function runReverseStringTest(testCase) {
-            try {
-              const result = reverseString(testCase.input);
-              const expected = testCase.expectedOutput;
-              const actual = String(result);
-              
-              return {
-                passed: actual === expected,
-                actualOutput: actual,
-                error: null
-              };
-            } catch (error) {
-              return {
-                passed: false,
-                actualOutput: null,
-                error: error.message
-              };
-            }
-          }
-          return runReverseStringTest(testCase);
-        `);
+          return {
+            passed: actual === expected,
+            actualOutput: actual,
+            error: null
+          };
+        } catch (error) {
+          return {
+            passed: false,
+            actualOutput: null,
+            error: error.message
+          };
+        }
+      }
+    `;
 
+        eval(functionCode);
 
         for (const testCase of testCases) {
             try {
-                const testResult = factoryFunc(testCase);
+                const testResult = eval('runReverseStringTest')(testCase);
                 results.push({
                     testCase,
                     passed: testResult.passed,
@@ -185,10 +183,7 @@ const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] 
     const results: TestResult[] = [];
 
     try {
-        const factoryFunc = new Function(
-          'testcase',
-          
-          `
+        const functionCode = `
       ${code}
       
       function runSumArrayTest(testCase) {
@@ -211,12 +206,13 @@ const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] 
           };
         }
       }
-    `);
+    `;
 
+        eval(functionCode);
 
         for (const testCase of testCases) {
             try {
-                const testResult = factoryFunc(testCase);
+                const testResult = eval('runSumArrayTest')(testCase);
                 results.push({
                     testCase,
                     passed: testResult.passed,
@@ -252,10 +248,7 @@ const executeFindMaxCode = (code: string, testCases: TestCase[]): TestResult[] =
     const results: TestResult[] = [];
 
     try {
-        const factoryFunc = new Function(
-          'testcase',
-
-          `
+        const functionCode = `
       ${code}
       
       function runFindMaxTest(testCase) {
@@ -278,12 +271,13 @@ const executeFindMaxCode = (code: string, testCases: TestCase[]): TestResult[] =
           };
         }
       }
-    `);
+    `;
 
+        eval(functionCode);
 
         for (const testCase of testCases) {
             try {
-                const testResult = factoryFunc(testCase);
+                const testResult = eval('runFindMaxTest')(testCase);
                 results.push({
                     testCase,
                     passed: testResult.passed,

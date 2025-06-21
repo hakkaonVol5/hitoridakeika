@@ -10,7 +10,11 @@ const sampleProblems = [
         timeLimit: 60,
         maxPlayers: 5,
         initialCode: `function reverseString(str) {
-  // ここにコードを書いてください
+  // ここにコードを書いてください。
+  // ※注意※
+  // reverseStringが自動的に実行されるので消さないようにしてください。
+  // reverseStringの引数strが元データです。
+  // reverseString関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
   return str;
 }`,
         testCases: [
