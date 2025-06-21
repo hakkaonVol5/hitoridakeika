@@ -188,7 +188,7 @@ export default function GameRoom() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                             <h1 className="text-xl font-bold text-gray-800">
-                                cordic chat
+                                みんなで競技プログラミング
                             </h1>
                             <div className="text-sm text-gray-500">
                                 ルームID: {roomId}
