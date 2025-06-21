@@ -7,14 +7,31 @@ const app = express();
 const server = createServer(app);
 
 // CORS設定
+const allowedOrigins = [
+    "http://localhost:3000",
+    "https://hitoridakeika.vercel.app"
+];
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        origin: function (origin, callback) {
+            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -331,5 +348,4 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
     console.log(`Socket.IO server running on port ${PORT}`);
-    console.log(`CORS origin: ${process.env.CLIENT_URL || "http://localhost:3000"}`);
 }); 
