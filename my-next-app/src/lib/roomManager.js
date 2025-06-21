@@ -1,0 +1,139 @@
+// my-next-app/src/lib/roomManager.js
+
+// サンプル問題データ（変更なし）
+const sampleProblems = [
+    {
+        id: 'reverse-string',
+        title: '文字列を逆順にする',
+        description: '与えられた文字列を逆順にして返す関数を作成してください。',
+        difficulty: 'easy',
+        timeLimit: 60,
+        maxPlayers: 5,
+        initialCode: `function reverseString(str) {
+  // ここにコードを書いてください
+  return str;
+}`,
+        testCases: [
+            { input: 'hello', expectedOutput: 'olleh' },
+            { input: 'world', expectedOutput: 'dlrow' },
+            { input: '12345', expectedOutput: '54321' },
+            { input: '', expectedOutput: '' }
+        ]
+    },
+    // ... 他の問題 ...
+];
+
+const rooms = new Map();
+const playerRooms = new Map();
+
+export const getRoom = (roomId) => rooms.get(roomId);
+
+export const createRoom = (roomId) => {
+    const problem = sampleProblems[Math.floor(Math.random() * sampleProblems.length)];
+    const room = {
+        id: roomId,
+        players: [],
+        currentPlayerIndex: 0,
+        code: problem.initialCode,
+        isGameActive: false,
+        problem: problem,
+        turnLog: []
+    };
+    rooms.set(roomId, room);
+    console.log(`Room created: ${roomId}`);
+    return room;
+};
+
+export const addPlayerToRoom = (roomId, player) => {
+    const room = getRoom(roomId);
+    if (!room) return { error: 'Room not found' };
+
+    if (playerRooms.has(player.id)) {
+        return { error: 'Player already in a room' };
+    }
+
+    if (room.players.length >= room.problem.maxPlayers) {
+        return { error: 'Room is full' };
+    }
+
+    room.players.push({
+        ...player,
+        turnOrder: room.players.length,
+        isCurrentTurn: room.players.length === 0
+    });
+    playerRooms.set(player.id, roomId);
+
+    if (room.players.length === 1) {
+        room.isGameActive = true;
+        room.startTime = new Date();
+    }
+
+    return { room };
+};
+
+export const removePlayerFromRoom = (playerId) => {
+    const roomId = playerRooms.get(playerId);
+    if (!roomId) return null;
+
+    const room = getRoom(roomId);
+    if (!room) return null;
+
+    const playerIndex = room.players.findIndex(p => p.id === playerId);
+    if (playerIndex === -1) return null;
+
+    room.players.splice(playerIndex, 1);
+    playerRooms.delete(playerId);
+
+    if (room.players.length === 0) {
+        rooms.delete(roomId);
+        console.log(`Room deleted: ${roomId}`);
+        return { roomDeleted: true, roomId };
+    }
+
+    if (playerIndex === room.currentPlayerIndex) {
+        room.currentPlayerIndex = room.currentPlayerIndex % room.players.length;
+        if (room.players.length > 0) {
+            room.players[room.currentPlayerIndex].isCurrentTurn = true;
+        }
+    }
+
+    return { room, roomId };
+};
+
+export const nextTurn = (roomId) => {
+    const room = getRoom(roomId);
+    if (!room || !room.isGameActive) return null;
+
+    if (room.players.length > 0) {
+        room.players[room.currentPlayerIndex].isCurrentTurn = false;
+        room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+        room.players[room.currentPlayerIndex].isCurrentTurn = true;
+    }
+
+    return room;
+};
+
+export const updateCode = (roomId, code) => {
+    const room = getRoom(roomId);
+    if (room) {
+        room.code = code;
+    }
+    return room;
+};
+
+export const submitGame = (roomId) => {
+    const room = getRoom(roomId);
+    if (room) {
+        room.isGameActive = false;
+        room.endTime = new Date();
+        const totalTime = Math.floor(((room.endTime - room.startTime) || 0) / 1000);
+        return {
+            isSuccess: true, // 本来はテスト結果で判定
+            totalTime,
+            turnLog: room.turnLog,
+            finalCode: room.code,
+            testResults: []
+        };
+    }
+    return null;
+}; 

@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { useSocket } from '../../src/lib/socket';
-import { useGameStore } from '../../src/store/gameStore';
-import { getDifficultyLabel, getDifficultyColor } from '../../src/lib/utils';
-import { executeProblemCode } from '../../src/lib/codeExecutor';
-import CodeEditor from '../../src/components/CodeEditor';
-import Timer from '../../src/components/Timer';
-import PlayerList from '../../src/components/PlayerList';
-import { TestResult } from '../../src/types/game';
+import { useSocket } from '@/lib/socket';
+import { useGameStore } from '@/store/gameStore';
+import { getDifficultyLabel, getDifficultyColor } from '@/lib/utils';
+import { executeProblemCode } from '@/lib/codeExecutor';
+import CodeEditor from '@/components/CodeEditor';
+import Timer from '@/components/Timer';
+import PlayerList from '@/components/PlayerList';
+import { TestResult } from '@/types/game';
 
 export default function GameRoom() {
     const router = useRouter();
@@ -18,13 +18,10 @@ export default function GameRoom() {
         currentPlayerId,
         isConnected,
         isMyTurn,
-        timeRemaining,
         updateCode: updateCodeInStore,
-        setGameResult
     } = useGameStore();
 
     const [playerName, setPlayerName] = useState('');
-    const [isHost, setIsHost] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [testResults, setTestResults] = useState<TestResult[]>([]);
     const [isExecuting, setIsExecuting] = useState(false);
@@ -32,16 +29,11 @@ export default function GameRoom() {
     const hasJoinedRoom = useRef(false);
 
     useEffect(() => {
-        if (!roomId || typeof roomId !== 'string') return;
-
-        // URLパラメータから情報を取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const name = urlParams.get('playerName') || '';
-        const host = urlParams.get('host') === 'true';
-
-        setPlayerName(name);
-        setIsHost(host);
-    }, [roomId]);
+        if (router.isReady) {
+            const name = (router.query.playerName as string) || '';
+            setPlayerName(name);
+        }
+    }, [router.isReady, router.query.playerName]);
 
     // 接続状態の監視とルーム参加
     useEffect(() => {
@@ -58,9 +50,8 @@ export default function GameRoom() {
         if (!isConnected && !isConnecting && connectionAttempts < 3) {
             const timer = setTimeout(() => {
                 console.log('Retrying connection...');
-                setConnectionAttempts(prev => prev + 1);
+                setConnectionAttempts((prev) => prev + 1);
                 hasJoinedRoom.current = false;
-                // ページを再読み込み
                 window.location.reload();
             }, 2000);
 
@@ -81,7 +72,6 @@ export default function GameRoom() {
 
         updateCodeInStore(code);
 
-        // サーバーにコード更新を送信
         if (roomId && typeof roomId === 'string') {
             updateCode(roomId, code);
         }
@@ -89,7 +79,7 @@ export default function GameRoom() {
 
     // コード実行
     const handleExecuteCode = async () => {
-        if (!room) return;
+        if (!room?.problem) return;
 
         setIsExecuting(true);
 
@@ -102,11 +92,9 @@ export default function GameRoom() {
 
             setTestResults(results);
 
-            // 全テストケースが通過したかチェック
-            const allPassed = results.every(result => result.passed);
+            const allPassed = results.every((result) => result.passed);
 
             if (allPassed) {
-                // 成功時の処理
                 if (roomId && typeof roomId === 'string') {
                     submitCode(roomId, room.code);
                 }
@@ -122,7 +110,6 @@ export default function GameRoom() {
     const handleTimeUp = () => {
         if (!room || !currentPlayerId) return;
 
-        // 次のプレイヤーに交代
         if (roomId && typeof roomId === 'string') {
             completeTurn(roomId, currentPlayerId);
         }
@@ -174,9 +161,11 @@ export default function GameRoom() {
                         </div>
 
                         <div className="flex items-center space-x-4">
-                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(room.problem.difficulty)}`}>
-                                {getDifficultyLabel(room.problem.difficulty)}
-                            </div>
+                            {room.problem && (
+                                <div className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(room.problem.difficulty)}`}>
+                                    {getDifficultyLabel(room.problem.difficulty)}
+                                </div>
+                            )}
                             <div className="text-sm text-gray-600">
                                 接続状態: {isConnected ? '🟢 接続中' : '🔴 切断中'}
                             </div>
@@ -197,31 +186,35 @@ export default function GameRoom() {
 
                     {/* メインコンテンツ */}
                     <div className="lg:col-span-3 space-y-6">
-                        {/* 問題表示 */}
-                        <div className="bg-white rounded-lg shadow-md p-6">
-                            <h2 className="text-xl font-bold text-gray-800 mb-4">
-                                {room.problem.title}
-                            </h2>
-                            <p className="text-gray-600 mb-4">
-                                {room.problem.description}
-                            </p>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                <span>制限時間: {room.problem.timeLimit}秒/人</span>
-                                <span>最大プレイヤー: {room.problem.maxPlayers}人</span>
-                            </div>
-                        </div>
+                        {room.problem && (
+                            <>
+                                {/* 問題表示 */}
+                                <div className="bg-white rounded-lg shadow-md p-6">
+                                    <h2 className="text-xl font-bold text-gray-800 mb-4">
+                                        {room.problem.title}
+                                    </h2>
+                                    <p className="text-gray-600 mb-4">
+                                        {room.problem.description}
+                                    </p>
+                                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                        <span>制限時間: {room.problem.timeLimit}秒/人</span>
+                                        <span>最大プレイヤー: {room.problem.maxPlayers}人</span>
+                                    </div>
+                                </div>
 
-                        {/* タイマー */}
-                        <div className="bg-white rounded-lg shadow-md p-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                                現在のターン
-                            </h3>
-                            <Timer
-                                initialTime={room.problem.timeLimit}
-                                onTimeUp={handleTimeUp}
-                                isActive={isMyTurn && room.isGameActive}
-                            />
-                        </div>
+                                {/* タイマー */}
+                                <div className="bg-white rounded-lg shadow-md p-6">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                        現在のターン
+                                    </h3>
+                                    <Timer
+                                        initialTime={room.problem.timeLimit}
+                                        onTimeUp={handleTimeUp}
+                                        isActive={isMyTurn && room.isGameActive}
+                                    />
+                                </div>
+                            </>
+                        )}
 
                         {/* コードエディタ */}
                         <div className="bg-white rounded-lg shadow-md p-6">

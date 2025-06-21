@@ -1,9 +1,9 @@
 import { create } from 'zustand';
-import { Room, Player, GameResult } from '../types/game';
+import { Room as RoomType, Player as PlayerType, GameResult as GameResultType } from '@/types/game';
 
 interface GameState {
     // ルーム情報
-    room: Room | null;
+    room: RoomType | null;
     currentPlayerId: string | null;
 
     // ゲーム状態
@@ -12,16 +12,16 @@ interface GameState {
     timeRemaining: number;
 
     // 結果
-    gameResult: GameResult | null;
+    gameResult: GameResultType | null;
 
     // アクション
-    setRoom: (room: Room) => void;
+    setRoom: (room: RoomType) => void;
     setCurrentPlayerId: (playerId: string) => void;
     setConnected: (connected: boolean) => void;
     setIsMyTurn: (isMyTurn: boolean) => void;
     setTimeRemaining: (time: number) => void;
     updateCode: (code: string) => void;
-    setGameResult: (result: GameResult) => void;
+    setGameResult: (result: GameResultType) => void;
     resetGame: () => void;
 }
 
@@ -35,12 +35,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     gameResult: null,
 
     // アクション
-    setRoom: (room: Room) => set({ room }),
+    setRoom: (room: RoomType) => set({ room }),
 
     setCurrentPlayerId: (playerId: string) => {
         set({ currentPlayerId: playerId });
         const { room } = get();
-        if (room) {
+        if (room && room.players) {
             const isMyTurn = room.players[room.currentPlayerIndex]?.id === playerId;
             set({ isMyTurn });
         }
@@ -60,17 +60,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     updateCode: (code: string) => {
         const { room } = get();
-        if (room && room.code !== code) {
-            set({
-                room: {
-                    ...room,
-                    code
-                }
-            });
+        if (room) {
+            set({ room: { ...room, code } });
         }
     },
 
-    setGameResult: (result: GameResult) => set({ gameResult: result }),
+    setGameResult: (result: GameResultType) => set({ gameResult: result }),
 
     resetGame: () => set({
         room: null,
