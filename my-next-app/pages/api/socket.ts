@@ -32,7 +32,6 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
     const httpServer: NetServer = res.socket.server as any;
     const io = new ServerIO(httpServer, {
       path: '/api/socket',
-      addTrailingSlash: false,
       cors: {
         origin: '*',
         methods: ['GET', 'POST'],
@@ -58,29 +57,17 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         }
 
         socket.join(roomId);
-        socket.emit('room-joined', {
-          room: updatedRoom,
-          playerId: socket.id,
-        });
 
-        socket.to(roomId).emit('player-joined', {
-          player: updatedRoom.players[updatedRoom.players.length - 1],
-        });
+        // ルームの最新情報を参加者全員にブロードキャスト
+        io.to(roomId).emit('updateRoom', updatedRoom);
+      });
 
-        // ✅ プレイヤー一覧送信（型明示）
-        io.to(roomId).emit('update-players', {
-          players: updatedRoom.players.map((p: Player) => p.name),
-        });
-
-        // ✅ 以下を追加：ホストがボタンを押したら手動でゲーム開始
-        socket.on('manual-start-game', ({ roomId }) => {
-          const room = getRoom(roomId);
-          if (room) {
-            io.to(roomId).emit('start-game');
-          }
-        });
-
-
+      // 'manual-start-game' イベントリスナーを 'join-room' の外に移動
+      socket.on('manual-start-game', ({ roomId }) => {
+        const room = getRoom(roomId);
+        if (room) {
+          io.to(roomId).emit('start-game');
+        }
       });
 
       socket.on('update-code', ({ roomId, code }) => {
@@ -112,16 +99,10 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
         console.log('Client disconnected:', socket.id);
         const result = removePlayerFromRoom(socket.id);
         if (result && !result.roomDeleted) {
-          socket.to(result.roomId).emit('player-left', {
-            playerId: socket.id,
-          });
-
-          // ✅ 切断後のプレイヤー一覧更新（型明示）
           const room = getRoom(result.roomId);
           if (room) {
-            io.to(result.roomId).emit('update-players', {
-              players: room.players.map((p: Player) => p.name),
-            });
+            // プレイヤー退出後、最新のルーム情報をブロードキャスト
+            io.to(result.roomId).emit('updateRoom', room);
           }
         }
       });
