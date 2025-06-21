@@ -2,6 +2,12 @@
 
 制限時間内で交代しながらコードを完成させる、リアルタイム協力型の競技プログラミング体験です。
 
+## 🌐 デプロイ
+
+- **本番環境**: [hitoridakeika.vercel.app](https://hitoridakeika.vercel.app)
+- **フレームワーク**: Next.js 15 (Pages Router)
+- **デプロイ先**: Vercel
+
 ## 🎯 特徴
 
 - **鬼畜な制限時間**: 一人あたり10-12秒の極端に短い制限時間
