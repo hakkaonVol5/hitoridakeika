@@ -1,98 +1,67 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { useGameStore } from '../store/gameStore';
 import { formatTime } from '../lib/utils';
 
-interface TimerProps {
-    initialTime: number; // 秒
-    onTimeUp: () => void;
-    isActive: boolean;
-}
+/**
+ * サーバーから送られてくる残り時間を表示するだけのコンポーネント。
+ * 独自のタイマーロジックは持たない。
+ */
+const Timer: React.FC = () => {
+    // Zustandストアから、現在の部屋の情報と、サーバー管理の残り時間を取得
+    const { room, timeRemaining } = useGameStore();
 
-export default function Timer({ initialTime, onTimeUp, isActive }: TimerProps) {
-    const [timeLeft, setTimeLeft] = useState(initialTime);
-    const { timeRemaining, setTimeRemaining } = useGameStore();
+    // 部屋情報がなければ何も表示しない
+    if (!room) {
+        return null;
+    }
 
-    // ストアの時間と同期（レンダリング中ではなくuseEffectで）
-    useEffect(() => {
-        if (timeRemaining > 0 && timeRemaining !== timeLeft) {
-            setTimeLeft(timeRemaining);
-        }
-    }, [timeRemaining]);
+    const { problem, isGameActive, players, currentPlayerIndex } = room;
 
-    // 初期時間が変更された場合の処理
-    useEffect(() => {
-        setTimeLeft(initialTime);
-    }, [initialTime]);
+    // 問題データから初期時間を取得
+    const initialTime = problem.timeLimit;
 
-    useEffect(() => {
-        if (!isActive || timeLeft <= 0) {
-            return;
-        }
-
-        const interval = setInterval(() => {
-            setTimeLeft((prev) => {
-                const newTime = prev - 1;
-
-                // setTimeRemainingはuseEffectの外で呼び出す
-                if (newTime <= 0) {
-                    // タイマー終了時の処理を次のレンダリングサイクルで実行
-                    setTimeout(() => {
-                        onTimeUp();
-                    }, 0);
-                    return 0;
-                }
-
-                return newTime;
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isActive, timeLeft, onTimeUp]);
-
-    // 時間が変更された時にストアを更新
-    useEffect(() => {
-        if (timeLeft !== timeRemaining) {
-            setTimeRemaining(timeLeft);
-        }
-    }, [timeLeft, timeRemaining, setTimeRemaining]);
-
-    // 時間が少なくなった時の警告色
-    const getTimerColor = () => {
-        if (timeLeft <= 3) return 'text-red-600';
-        if (timeLeft <= 10) return 'text-yellow-600';
-        return 'text-gray-800';
+    // 残り時間に応じて文字色を変更する
+    const getTimeColor = () => {
+        if (!isGameActive) return 'text-gray-500';
+        if (timeRemaining > initialTime * 0.5) return 'text-green-600';
+        if (timeRemaining > initialTime * 0.2) return 'text-yellow-600';
+        return 'text-red-600';
     };
 
-    // プログレスバーの計算
-    const progressPercentage = ((initialTime - timeLeft) / initialTime) * 100;
+    // プログレスバーの進捗率を計算
+    const progressPercentage = isGameActive ? ((initialTime - timeRemaining) / initialTime) * 100 : 0;
+
+    // 現在誰のターンかを表示する
+    const getCurrentTurnPlayerName = () => {
+        if (!isGameActive || !players[currentPlayerIndex]) {
+            return "待機中...";
+        }
+        return `${players[currentPlayerIndex].name}さんのターン`;
+    };
 
     return (
-        <div className="flex items-center space-x-4">
-            {/* タイマー表示 */}
-            <div className="flex items-center space-x-2">
-                <div className={`text-2xl font-bold ${getTimerColor()}`}>
-                    {formatTime(timeLeft)}
-                </div>
-                {timeLeft <= 10 && (
-                    <div className="text-red-500 animate-pulse">
-                        ⚠️
-                    </div>
-                )}
+        <div className="w-full text-center p-4">
+            <div className="text-lg text-gray-700 mb-3">
+                {getCurrentTurnPlayerName()}
             </div>
-
+            
             {/* プログレスバー */}
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div
-                    className={`h-2 rounded-full transition-all duration-1000 ${timeLeft <= 3 ? 'bg-red-500' : timeLeft <= 10 ? 'bg-yellow-500' : 'bg-blue-500'
-                        }`}
-                    style={{ width: `${progressPercentage}%` }}
-                />
+            <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                <div 
+                    className={`h-3 rounded-full transition-all duration-300 ${
+                        progressPercentage > 80 ? 'bg-red-500' : 
+                        progressPercentage > 50 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                ></div>
             </div>
-
-            {/* 状態表示 */}
-            <div className="text-sm text-gray-600">
-                {isActive ? '⏰ 進行中' : '⏸️ 停止中'}
+            
+            <div className={`text-5xl font-bold tracking-wider transition-colors duration-300 ${getTimeColor()}`}>
+                {formatTime(timeRemaining)}
             </div>
+            
         </div>
     );
-} 
+};
+
+export default Timer; 

@@ -108,15 +108,6 @@ export default function GameRoom() {
         }
     };
 
-    // タイマー終了時の処理
-    const handleTimeUp = () => {
-        if (!room || !currentPlayerId) return;
-
-        if (roomId) {
-            completeTurn(roomId, currentPlayerId);
-        }
-    };
-
     // ローディング中
     if (isLoading || !room) {
         return (
@@ -209,11 +200,7 @@ export default function GameRoom() {
                                     <h3 className="text-lg font-semibold text-gray-800 mb-4">
                                         現在のターン
                                     </h3>
-                                    <Timer
-                                        initialTime={room.problem.timeLimit}
-                                        onTimeUp={handleTimeUp}
-                                        isActive={isMyTurn && room.isGameActive}
-                                    />
+                                    <Timer />
                                 </div>
                             </>
                         )}
