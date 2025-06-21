@@ -3,7 +3,7 @@ import { useGameStore } from '@/store/gameStore';
 import io from 'socket.io-client';
 import type { GameResult, Player, Room } from '@/types/game';
 
-// Socket.IOサーバーのURL（Renderでデプロイしたサーバーを指す）
+// Socket.IOサーバーのURL（独立したサーバーに接続）
 const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3001';
 
 export const useSocket = () => {
@@ -26,13 +26,13 @@ export const useSocket = () => {
         hasInitialized.current = true;
         setIsConnecting(true);
 
-        // Renderサーバーに直接接続
-        socketRef.current = io( {
-            path: '/api/socket',
+        // 独立したサーバーに直接接続
+        socketRef.current = io(SOCKET_SERVER_URL, {
             reconnection: true,
             reconnectionAttempts: 5,
             reconnectionDelay: 1000,
-            transports: ['websocket']
+            timeout: 20000,
+            transports: ['websocket', 'polling']
         });
 
         const socket = socketRef.current;
@@ -87,6 +87,10 @@ export const useSocket = () => {
 
         socket.on('game-result', (data: { result: GameResult }) => {
             setGameResult(data.result);
+        });
+
+        socket.on('room-updated', (data: { room: Room }) => {
+            setRoom(data.room);
         });
 
         socket.on('error', (data: { message: string }) => {

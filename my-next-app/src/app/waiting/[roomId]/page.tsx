@@ -13,6 +13,7 @@ export default function WaitingRoom() {
   // 安全なパラメータ取得
   const roomId = params?.roomId ?? ''
   const isHost = searchParams?.get('host') === 'true'
+  const playerName = searchParams?.get('playerName') ?? ''
 
   const { socket } = useSocket();
   const { room } = useGameStore();
@@ -28,13 +29,13 @@ export default function WaitingRoom() {
   useEffect(() => {
     if (!socket) return
     const handleStart = () => {
-      router.push(`/play/${roomId}`)
+      router.push(`/play/${roomId}?playerName=${playerName}`)
     }
     socket.on('game-started', handleStart)
     return () => {
       socket.off('game-started', handleStart)
     }
-  }, [socket, roomId, router])
+  }, [socket, roomId, router, playerName])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-blue-100 p-4">

@@ -11,6 +11,8 @@ const {
     nextTurn,
     updateCode,
     submitGame,
+    sampleProblems,
+    rooms,
 } = require('./lib/roomManager');
 
 const app = express();
@@ -22,7 +24,7 @@ const VERCEL_URL_REGEX = /vercel\.app$/;
 
 const io = new Server(server, {
     cors: {
-        origin: [VERCEL_URL_REGEX, "http://localhost:3000"],
+        origin: [VERCEL_URL_REGEX, "http://localhost:3000", "http://localhost:3001"],
         methods: ['GET', 'POST'],
     },
 });
@@ -35,20 +37,49 @@ io.on('connection', (socket) => {
     console.log(`Client connected: ${socket.id}`);
 
     socket.on('join-room', ({ roomId, playerName }) => {
+        console.log(`\n--- Event: join-room ---`);
+        console.log(`Received data: roomId='${roomId}', playerName='${playerName}'`);
+        console.log('Existing rooms before action:', [...rooms.keys()]);
+
         let room = getRoom(roomId);
         if (!room) {
+            console.log(`Room '${roomId}' not found. Creating a new one.`);
             room = createRoom(roomId);
+        } else {
+            console.log(`Room '${roomId}' found. Joining existing room.`);
         }
 
         const { room: updatedRoom, error } = addPlayerToRoom(roomId, { id: socket.id, name: playerName });
 
         if (error) {
+            console.error(`Error adding player to room '${roomId}':`, error);
             return socket.emit('error', { message: error });
         }
+        
+        console.log(`Successfully updated room '${roomId}'. Current players:`, updatedRoom.players.map(p => p.name));
+        console.log(`--- End Event: join-room ---\n`);
 
         socket.join(roomId);
         socket.emit('room-joined', { room: updatedRoom, playerId: socket.id });
         socket.to(roomId).emit('player-joined', { player: updatedRoom.players[updatedRoom.players.length - 1] });
+    });
+
+    socket.on('manual-start-game', ({ roomId }) => {
+        const room = getRoom(roomId);
+        if (room && room.players.length >= 2) {
+            const problem = sampleProblems[Math.floor(Math.random() * sampleProblems.length)];
+            room.problem = problem;
+            room.code = problem.initialCode;
+            room.isGameActive = true;
+            room.startTime = new Date();
+            room.currentPlayerIndex = 0;
+            
+            io.to(roomId).emit('game-started');
+            
+            io.to(roomId).emit('room-updated', { room });
+            
+            console.log(`Game started for room: ${roomId} with problem: ${problem.title}`);
+        }
     });
 
     socket.on('update-code', ({ roomId, code }) => {
