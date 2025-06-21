@@ -3,11 +3,8 @@ import { useGameStore } from '@/store/gameStore';
 import io from 'socket.io-client';
 import type { GameResult, Player, Room } from '@/types/game';
 
-// App Routerでは同じポート（3000）でSocket.IOサーバーを動作させる
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
-
-// モックモードの判定（本番環境でSocket.IOサーバーが利用できない場合）
-const isMockMode = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_SOCKET_URL;
+// Socket.IOサーバーのURL（Renderでデプロイしたサーバーを指す）
+const SOCKET_SERVER_URL = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:3001';
 
 export const useSocket = () => {
     // @ts-ignore
@@ -25,87 +22,75 @@ export const useSocket = () => {
     } = useGameStore();
 
     useEffect(() => {
-        if (hasInitialized.current) return;
+        if (hasInitialized.current || !SOCKET_SERVER_URL) return;
         hasInitialized.current = true;
+        setIsConnecting(true);
 
-        const initSocket = async () => {
-            setIsConnecting(true);
-            try {
-                // サーバー側のSocket.IOを初期化するためにAPIルートを叩く
-                await fetch('/api/socket');
+        // Renderサーバーに直接接続
+        socketRef.current = io(SOCKET_SERVER_URL, {
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            transports: ['websocket'] // WebSocketを優先的に使用
+        });
 
-                // クライアント側でSocket.IOに接続
-                // URLを省略し、pathを正しく指定する
-                socketRef.current = io({
-                    path: '/api/socket',
-                });
+        const socket = socketRef.current;
 
-                const socket = socketRef.current;
+        socket.on('connect', () => {
+            console.log('✅ Socket connected:', socket.id);
+            setConnected(true);
+            setIsConnecting(false);
+        });
 
-                socket.on('connect', () => {
-                    console.log('✅ Socket connected:', socket.id);
-                    setConnected(true);
-                    setIsConnecting(false);
-                });
+        socket.on('connect_error', (error: Error) => {
+            console.error('❌ Socket.IO connection error:', error);
+            setConnected(false);
+            setIsConnecting(false);
+        });
 
-                socket.on('connect_error', (error: Error) => {
-                    console.error('❌ Socket.IO connection error:', error);
-                    setConnected(false);
-                    setIsConnecting(false);
-                });
+        socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+            setConnected(false);
+        });
 
-                socket.on('disconnect', () => {
-                    console.log('Socket disconnected');
-                    setConnected(false);
-                });
+        socket.on('room-joined', (data: { room: Room; playerId: string }) => {
+            setRoom(data.room);
+            setCurrentPlayerId(data.playerId);
+        });
 
-                socket.on('room-joined', (data: { room: Room; playerId: string }) => {
-                    setRoom(data.room);
-                    setCurrentPlayerId(data.playerId);
-                });
-
-                socket.on('player-joined', (data: { player: Player }) => {
-                    const { room } = useGameStore.getState();
-                    if (room) {
-                        setRoom({ ...room, players: [...room.players, data.player] });
-                    }
-                });
-
-                socket.on('player-left', (data: { playerId: string }) => {
-                    const { room } = useGameStore.getState();
-                    if (room) {
-                        setRoom({ ...room, players: room.players.filter((p) => p.id !== data.playerId) });
-                    }
-                });
-
-                socket.on('code-updated', (data: { code: string }) => {
-                    updateCodeInStore(data.code);
-                });
-
-                socket.on('turn-changed', (data: { currentPlayer: Player; timeRemaining: number }) => {
-                    const { currentPlayerId } = useGameStore.getState();
-                    if (currentPlayerId) {
-                        setIsMyTurn(data.currentPlayer.id === currentPlayerId);
-                    }
-                    setTimeRemaining(data.timeRemaining);
-                });
-
-                socket.on('game-result', (data: { result: GameResult }) => {
-                    setGameResult(data.result);
-                });
-
-                socket.on('error', (data: { message: string }) => {
-                    alert(`エラー: ${data.message}`);
-                });
-
-            } catch (error) {
-                console.error('Failed to initialize socket:', error);
-                setConnected(false);
-                setIsConnecting(false);
+        socket.on('player-joined', (data: { player: Player }) => {
+            const { room } = useGameStore.getState();
+            if (room) {
+                setRoom({ ...room, players: [...room.players, data.player] });
             }
-        };
+        });
 
-        initSocket();
+        socket.on('player-left', (data: { playerId: string }) => {
+            const { room } = useGameStore.getState();
+            if (room) {
+                setRoom({ ...room, players: room.players.filter((p) => p.id !== data.playerId) });
+            }
+        });
+
+        socket.on('code-updated', (data: { code: string }) => {
+            updateCodeInStore(data.code);
+        });
+
+        socket.on('turn-changed', (data: { currentPlayer: Player; timeRemaining: number }) => {
+            const { currentPlayerId } = useGameStore.getState();
+            if (currentPlayerId) {
+                setIsMyTurn(data.currentPlayer.id === currentPlayerId);
+            }
+            setTimeRemaining(data.timeRemaining);
+        });
+
+        socket.on('game-result', (data: { result: GameResult }) => {
+            setGameResult(data.result);
+        });
+
+        socket.on('error', (data: { message: string }) => {
+            alert(`エラー: ${data.message}`);
+        });
 
         return () => {
             if (socketRef.current) {
