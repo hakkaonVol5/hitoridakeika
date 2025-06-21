@@ -15,6 +15,11 @@ export default function GameRoom() {
     const params = useParams();
     const searchParams = useSearchParams();
     const roomId = params?.roomId as string;
+    const [totalPublicProblemNum, setTotalPublicProblemNum] = useState(0);
+    const [passPublicProblemNum, setPassPublicProblemNum] = useState(0);
+    const [totalPrivateProblemNum, setTotalPrivateProblemNum] = useState(0);
+    const [passPrivateProblemNum, setPassPrivateProblemNum] = useState(0);
+
 
     const { joinRoom, updateCode, submitCode, completeTurn, isConnecting } = useSocket();
     const {
@@ -23,6 +28,7 @@ export default function GameRoom() {
         isConnected,
         isMyTurn,
         updateCode: updateCodeInStore,
+        gameResult,
     } = useGameStore();
 
     const [playerName, setPlayerName] = useState('');
@@ -31,6 +37,8 @@ export default function GameRoom() {
     const [isExecuting, setIsExecuting] = useState(false);
     const [connectionAttempts, setConnectionAttempts] = useState(0);
     const hasJoinedRoom = useRef(false);
+
+
 
     useEffect(() => {
         const name = searchParams?.get('playerName') || '';
@@ -80,26 +88,51 @@ export default function GameRoom() {
     };
 
     // コード実行
-    const handleExecuteCode = async () => {
+    const handleExecuteCode = async (flag:boolean) => {
         if (!room?.problem) return;
 
         setIsExecuting(true);
-
         try {
-            const results = executeProblemCode(
+            const {results, nonVisibleResults} = executeProblemCode(
                 room.problem.id,
                 room.code,
-                room.problem.testCases
+                room.problem.testCases,
+                room.problem.nonVisibleTestCases
             );
 
             setTestResults(results);
 
-            const allPassed = results.every((result) => result.passed);
+            let publicPassed = 0;
+            let privatePassed = 0;
 
-            if (allPassed) {
-                if (roomId) {
-                    submitCode(roomId, room.code);
-                }
+            if(flag){
+                // 公開テストケースの集計
+                results.forEach(result => {
+                    if (result.passed) {
+                        publicPassed++;
+                    }
+                });
+                setPassPublicProblemNum(publicPassed);
+                setTotalPublicProblemNum(results.length);
+
+                // 非公開テストケースの集計
+                nonVisibleResults.forEach(result => {
+                    if (result.passed) {
+                        privatePassed++;
+                    }
+                });
+                setPassPrivateProblemNum(privatePassed);
+                setTotalPrivateProblemNum(nonVisibleResults.length);
+            }
+
+
+            //見えるテストケースも見えないテストケースも全て通ったら
+            const allPassed = nonVisibleResults.every((result) => result.passed) && results.every((result) => result.passed);
+
+            if (roomId && flag) { // flagがtrue（提出ボタン）の場合
+                // 全てのテストに合格したかどうかをサーバーに伝える
+                // submitGame 関数を拡張して、allPassed の情報を受け取れるようにする必要がある
+                submitCode(roomId, room.code, allPassed); // allPassed も引数として渡す
             }
         } catch (error) {
             console.error('コード実行エラー:', error);
@@ -248,7 +281,7 @@ export default function GameRoom() {
 
                             <div className="flex space-x-4">
                                 <button
-                                    onClick={handleExecuteCode}
+                                    onClick={() => handleExecuteCode(false)}
                                     disabled={isExecuting || !isMyTurn}
                                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -256,11 +289,7 @@ export default function GameRoom() {
                                 </button>
 
                                 <button
-                                    onClick={() => {
-                                        if (roomId) {
-                                            submitCode(roomId, room.code);
-                                        }
-                                    }}
+                                    onClick={() => handleExecuteCode(true)}
                                     disabled={!isMyTurn}
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -314,6 +343,40 @@ export default function GameRoom() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* ゲーム結果表示（新しいセクション）*/}
+                        {gameResult && ( // gameResult が存在する場合のみ表示
+                            <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                    ゲーム結果
+                                </h3>
+                                <p className="text-green-700 text-lg">
+                                    公開テストケースの正答率：{passPublicProblemNum}/{totalPublicProblemNum}<br />
+                                    非公開テストケースの正答率：{passPrivateProblemNum}/{totalPrivateProblemNum}<br />
+                                </p>
+                                {gameResult.isSuccess ? (
+                                    <p className="text-green-700 text-lg">
+                                        <strong>✨ クリア！🎉</strong><br />
+                                        クリア時間: <span className="font-bold text-2xl text-green-800">{gameResult.totalTime}</span> 秒
+                                    </p>
+                                ) : (
+                                    <p className="text-red-700 text-lg">
+                                        残念！クリアできませんでした。
+                                    </p>
+                                )}
+                                {/* 必要に応じて他の情報も追加 */}
+                                {gameResult.turnLog && gameResult.turnLog.length > 0 && (
+                                    <div className="mt-4">
+                                        <h4 className="text-md font-semibold text-gray-700 mb-2">ターンログ:</h4>
+                                        <ul className="list-disc list-inside text-sm text-gray-600">
+                                            {gameResult.turnLog.map((log, i) => (
+                                                <li key={i}>{log.toString()}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>

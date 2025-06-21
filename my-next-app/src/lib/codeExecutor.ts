@@ -1,8 +1,9 @@
-import { TestCase, TestResult } from '../types/game';
+import { TestCase, TestResult, CodeExecutionResult } from '../types/game';
 
 // 安全なコード実行環境（簡易版）
-export const executeCode = (code: string, testCases: TestCase[]): TestResult[] => {
+export const executeCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
         // コードを実行可能な関数に変換
@@ -81,7 +82,7 @@ export const executeCode = (code: string, testCases: TestCase[]): TestResult[] =
         }
     }
 
-    return results;
+    return {results, nonVisibleResults};
 };
 
 // コードの構文チェック
@@ -99,55 +100,58 @@ export const validateCode = (code: string): { isValid: boolean; error?: string }
 };
 
 // 特定の問題に対するコード実行
-export const executeProblemCode = (problemId: string, code: string, testCases: TestCase[]): TestResult[] => {
+export const executeProblemCode = (problemId: string, code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     // 問題固有の実行ロジック
     switch (problemId) {
         case 'reverse-string':
-            return executeReverseStringCode(code, testCases);
+            return executeReverseStringCode(code, testCases, nonVisibleTestCases);
         case 'sum-array':
-            return executeSumArrayCode(code, testCases);
+            return executeSumArrayCode(code, testCases, nonVisibleTestCases);
         case 'find-max':
-            return executeFindMaxCode(code, testCases);
+            return executeFindMaxCode(code, testCases, nonVisibleTestCases);
         default:
-            return executeCode(code, testCases);
+            return executeCode(code, testCases, nonVisibleTestCases);
     }
 };
 
 // 文字列逆順問題の実行
-const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResult[] => {
+const executeReverseStringCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
         // コードを実行可能にする
-        const functionCode = `
-      ${code}
-      
-      function runReverseStringTest(testCase) {
-        try {
-          const result = reverseString(testCase.input);
-          const expected = testCase.expectedOutput;
-          const actual = String(result);
+        const factoryFunc = new Function(
+          'testCase', // 引数として受け取るもの
+          `
+          ${code}
           
-          return {
-            passed: actual === expected,
-            actualOutput: actual,
-            error: null
-          };
-        } catch (error) {
-          return {
-            passed: false,
-            actualOutput: null,
-            error: error.message
-          };
-        }
-      }
-    `;
+          function runReverseStringTest(testCase) {
+            try {
+              const result = reverseString(testCase.input);
+              const expected = testCase.expectedOutput;
+              const actual = String(result);
+              
+              return {
+                passed: actual === expected,
+                actualOutput: actual,
+                error: null
+              };
+            } catch (error) {
+              return {
+                passed: false,
+                actualOutput: null,
+                error: error.message
+              };
+            }
+          }
+          return runReverseStringTest(testCase);
+        `);
 
-        eval(functionCode);
 
         for (const testCase of testCases) {
             try {
-                const testResult = eval('runReverseStringTest')(testCase);
+                const testResult = factoryFunc(testCase);
                 results.push({
                     testCase,
                     passed: testResult.passed,
@@ -156,6 +160,24 @@ const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResu
                 });
             } catch (error) {
                 results.push({
+                    testCase,
+                    passed: false,
+                    actualOutput: undefined,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+        }
+        for (const testCase of nonVisibleTestCases) {
+            try {
+                const testResult = factoryFunc(testCase);
+                nonVisibleResults.push({
+                    testCase,
+                    passed: testResult.passed,
+                    actualOutput: testResult.actualOutput,
+                    error: testResult.error
+                });
+            } catch (error) {
+                nonVisibleResults.push({
                     testCase,
                     passed: false,
                     actualOutput: undefined,
@@ -175,44 +197,55 @@ const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResu
         }
     }
 
-    return results;
+    return {results, nonVisibleResults};
 };
 
 // 配列合計問題の実行
-const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] => {
+export const executeSumArrayCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
-        const functionCode = `
-      ${code}
-      
-      function runSumArrayTest(testCase) {
-        try {
-          const input = eval(testCase.input);
-          const result = sumArray(input);
-          const expected = parseInt(testCase.expectedOutput);
-          const actual = result;
-          
-          return {
-            passed: actual === expected,
-            actualOutput: String(actual),
-            error: null
-          };
-        } catch (error) {
-          return {
-            passed: false,
-            actualOutput: null,
-            error: error.message
-          };
-        }
-      }
-    `;
+        // new Function に渡す引数を testCaseInput と testCaseExpectedOutput に変更
+        const factoryFunc = new Function(
+            'testCaseInput', // JSON.parseされた配列が入る
+            'testCaseExpectedOutput', // parseIntされた数値が入る
+            `
+            ${code}
+            
+            function runSumArrayTest(inputArray, expectedNumber) {
+                try {
+                    // sumArray関数を呼び出す
+                    const result = sumArray(inputArray);
+                    const actual = result;
+                    
+                    return {
+                        passed: actual === expectedNumber, // 数値同士を比較
+                        actualOutput: String(actual), // 表示用に文字列に変換
+                        error: null
+                    };
+                } catch (error) {
+                    return {
+                        passed: false,
+                        actualOutput: null,
+                        error: error instanceof Error ? error.message : 'Unknown error' // エラーメッセージを正しく取得
+                    };
+                }
+            }
+            // factoryFuncが呼び出されたら、runSumArrayTestInternalを呼び出して結果を返す
+            return runSumArrayTest(testCaseInput, testCaseExpectedOutput);
+            `
+        );
 
-        eval(functionCode);
-
+        // testCases のループ処理
         for (const testCase of testCases) {
             try {
-                const testResult = eval('runSumArrayTest')(testCase);
+                // 入力と期待値を安全にパース
+                const inputParsed = JSON.parse(testCase.input);
+                const expectedParsed = parseFloat(testCase.expectedOutput); // 小数点がある可能性を考慮してparseFloat
+
+                // factoryFunc を呼び出し、パースした引数を渡す
+                const testResult = factoryFunc(inputParsed, expectedParsed);
                 results.push({
                     testCase,
                     passed: testResult.passed,
@@ -229,55 +262,93 @@ const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] 
             }
         }
 
-    } catch (error) {
-        for (const testCase of testCases) {
-            results.push({
-                testCase,
-                passed: false,
-                actualOutput: undefined,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            });
+        // nonVisibleTestCases のループ処理を追加
+        for (const testCase of nonVisibleTestCases) {
+            try {
+                const inputParsed = JSON.parse(testCase.input);
+                const expectedParsed = parseFloat(testCase.expectedOutput);
+                const testResult = factoryFunc(inputParsed, expectedParsed);
+                nonVisibleResults.push({
+                    testCase,
+                    passed: testResult.passed,
+                    actualOutput: testResult.actualOutput,
+                    error: testResult.error
+                });
+            } catch (error) {
+                nonVisibleResults.push({
+                    testCase,
+                    passed: false,
+                    actualOutput: undefined,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
         }
+
+    } catch (error) {
+        // factoryFunc の生成自体でエラーが発生した場合（例: ユーザーコードのシンタックスエラー）
+        testCases.forEach(testCase => results.push({
+            testCase,
+            passed: false,
+            actualOutput: undefined,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }));
+        nonVisibleTestCases.forEach(testCase => nonVisibleResults.push({ // nonVisibleTestCasesも処理
+            testCase,
+            passed: false,
+            actualOutput: undefined,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }));
     }
 
-    return results;
+    return { results, nonVisibleResults };
 };
 
+
 // 最大値問題の実行
-const executeFindMaxCode = (code: string, testCases: TestCase[]): TestResult[] => {
+export const executeFindMaxCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
-        const functionCode = `
-      ${code}
-      
-      function runFindMaxTest(testCase) {
-        try {
-          const input = eval(testCase.input);
-          const result = findMax(input);
-          const expected = parseInt(testCase.expectedOutput);
-          const actual = result;
-          
-          return {
-            passed: actual === expected,
-            actualOutput: String(actual),
-            error: null
-          };
-        } catch (error) {
-          return {
-            passed: false,
-            actualOutput: null,
-            error: error.message
-          };
-        }
-      }
-    `;
+        // new Function に渡す引数を testCaseInput と testCaseExpectedOutput に変更
+        const factoryFunc = new Function(
+            'testCaseInput', // JSON.parseされた配列が入る
+            'testCaseExpectedOutput', // parseIntされた数値が入る
+            `
+            ${code}
+            
+            function runFindMaxTest(inputArray, expectedNumber) {
+                try {
+                    const result = findMax(inputArray);
+                    const actual = result;
+                    
+                    return {
+                        passed: actual === expectedNumber, // 数値同士を比較
+                        actualOutput: String(actual), // 表示用に文字列に変換
+                        error: null
+                    };
+                } catch (error) {
+                    return {
+                        passed: false,
+                        actualOutput: null,
+                        error: error instanceof Error ? error.message : 'Unknown error' // エラーメッセージを正しく取得
+                    };
+                }
+            }
+            // factoryFuncが呼び出されたら、runFindMaxTestInternalを呼び出して結果を返す
+            return runFindMaxTest(testCaseInput, testCaseExpectedOutput);
+            `
+        );
 
-        eval(functionCode);
-
+        // testCases のループ処理
         for (const testCase of testCases) {
             try {
-                const testResult = eval('runFindMaxTest')(testCase);
+                // 入力と期待値を安全にパース
+                const inputParsed = JSON.parse(testCase.input);
+                const expectedParsed = parseFloat(testCase.expectedOutput); // 期待値が小数点の可能性も考慮
+
+                // factoryFunc を呼び出し、パースした引数を渡す
+                const testResult = factoryFunc(inputParsed, expectedParsed);
                 results.push({
                     testCase,
                     passed: testResult.passed,
@@ -294,16 +365,43 @@ const executeFindMaxCode = (code: string, testCases: TestCase[]): TestResult[] =
             }
         }
 
-    } catch (error) {
-        for (const testCase of testCases) {
-            results.push({
-                testCase,
-                passed: false,
-                actualOutput: undefined,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            });
+        // nonVisibleTestCases のループ処理を追加
+        for (const testCase of nonVisibleTestCases) {
+            try {
+                const inputParsed = JSON.parse(testCase.input);
+                const expectedParsed = parseFloat(testCase.expectedOutput);
+                const testResult = factoryFunc(inputParsed, expectedParsed);
+                nonVisibleResults.push({
+                    testCase,
+                    passed: testResult.passed,
+                    actualOutput: testResult.actualOutput,
+                    error: testResult.error
+                });
+            } catch (error) {
+                nonVisibleResults.push({
+                    testCase,
+                    passed: false,
+                    actualOutput: undefined,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
         }
+
+    } catch (error) {
+        // factoryFunc の生成自体でエラーが発生した場合（例: ユーザーコードのシンタックスエラー）
+        testCases.forEach(testCase => results.push({
+            testCase,
+            passed: false,
+            actualOutput: undefined,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }));
+        nonVisibleTestCases.forEach(testCase => nonVisibleResults.push({ // nonVisibleTestCasesも処理
+            testCase,
+            passed: false,
+            actualOutput: undefined,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }));
     }
 
-    return results;
-}; 
+    return { results, nonVisibleResults };
+};

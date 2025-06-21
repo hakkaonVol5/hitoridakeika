@@ -1,27 +1,72 @@
 // my-next-app/src/lib/roomManager.js
+import { sampleProblems } from "@/data/problems";
 
 // サンプル問題データ（変更なし）
-const sampleProblems = [
-    {
-        id: 'reverse-string',
-        title: '文字列を逆順にする',
-        description: '与えられた文字列を逆順にして返す関数を作成してください。',
-        difficulty: 'easy',
-        timeLimit: 60,
-        maxPlayers: 5,
-        initialCode: `function reverseString(str) {
-  // ここにコードを書いてください
-  return str;
-}`,
-        testCases: [
-            { input: 'hello', expectedOutput: 'olleh' },
-            { input: 'world', expectedOutput: 'dlrow' },
-            { input: '12345', expectedOutput: '54321' },
-            { input: '', expectedOutput: '' }
-        ]
-    },
-    // ... 他の問題 ...
-];
+// const sampleProblems = [
+//     {
+//         id: 'sum-array',
+//         title: '配列の合計を計算',
+//         description: '数値の配列を受け取り、その合計を返す関数を作成してください。',
+//         difficulty: 'easy',
+//         timeLimit: 60,
+//         maxPlayers: 5,
+//         initialCode: `function sumArray(arr) {
+//   // ここにコードを書いてください
+//   // ※注意※
+//   // sumArrayが自動的に実行されるので消さないようにしてください。
+//   // sumArrayの引数arrが与えられる配列です。
+//   // sumArray関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
+//   return 0;
+// }
+// `,
+//         testCases: [
+//             {
+//                 input: '[1, 2, 3, 4, 5]',
+//                 expectedOutput: '15',
+//                 description: '基本的な配列の合計'
+//             },
+//             {
+//                 input: '[10, 20, 30]',
+//                 expectedOutput: '60',
+//                 description: '別の配列の合計'
+//             },
+//             {
+//                 input: '[1.6, 2]',
+//                 expectedOutput: '3.6',
+//                 description: '小数'
+//             },
+//             {
+//                 input: '[1]',
+//                 expectedOutput: '1',
+//                 description: '要素が1つの配列'
+//             }
+//         ],
+//         nonVisibleTestCases: [
+//             {
+//                 input: '[100, 200, 300, 400]',
+//                 expectedOutput: '1000'
+//             },
+//             {
+//                 input: '[-1, -2, -3]',
+//                 expectedOutput: '-6'
+//             },
+//             {
+//                 input: '[0, 0, 0, 0]',
+//                 expectedOutput: '0'
+//             },
+//             {
+//                 input: '[5, -5]',
+//                 expectedOutput: '0'
+//             },
+//             {
+//                 input: '[1.5, 2.5, 3.0]', // 小数点のテストケースも追加
+//                 expectedOutput: '7'
+//             }
+//         ]
+//     },
+// ];
+
+
 
 const rooms = new Map();
 const playerRooms = new Map();
@@ -121,14 +166,15 @@ export const updateCode = (roomId, code) => {
     return room;
 };
 
-export const submitGame = (roomId) => {
+export const submitGame = (roomId, submittedCode, isSuccess) => {
+    console.log("いすさくせす"+isSuccess)
     const room = getRoom(roomId);
     if (room) {
         room.isGameActive = false;
         room.endTime = new Date();
         const totalTime = Math.floor(((room.endTime - room.startTime) || 0) / 1000);
         return {
-            isSuccess: true, // 本来はテスト結果で判定
+            isSuccess: isSuccess,
             totalTime,
             turnLog: room.turnLog,
             finalCode: room.code,
