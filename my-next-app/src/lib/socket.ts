@@ -27,11 +27,12 @@ export const useSocket = () => {
         setIsConnecting(true);
 
         // Renderサーバーに直接接続
-        socketRef.current = io(SOCKET_SERVER_URL, {
+        socketRef.current = io( {
+            path: '/api/socket',
             reconnection: true,
             reconnectionAttempts: 5,
             reconnectionDelay: 1000,
-            transports: ['websocket'] // WebSocketを優先的に使用
+            transports: ['websocket']
         });
 
         const socket = socketRef.current;
