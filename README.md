@@ -1,2 +1,0 @@
-# hitoridakeika
-s
