@@ -70,14 +70,6 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
                 // socket.to(roomId).emit('player-joined', { player: updatedRoom.players[updatedRoom.players.length - 1] });
             });
 
-            // 'manual-start-game' イベントリスナー (main ブランチの追加)
-            socket.on('manual-start-game', ({ roomId }) => {
-                const room = getRoom(roomId);
-                if (room) {
-                    io.to(roomId).emit('start-game');
-                }
-            });
-
             // update-code イベントハンドラ
             socket.on('update-code', ({ roomId, code }) => {
                 updateCode(roomId, code);
