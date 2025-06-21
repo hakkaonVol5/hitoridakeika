@@ -23,6 +23,7 @@ export default function GameRoom() {
         isConnected,
         isMyTurn,
         updateCode: updateCodeInStore,
+        gameResult,
     } = useGameStore();
 
     const [playerName, setPlayerName] = useState('');
@@ -99,7 +100,7 @@ export default function GameRoom() {
             if (allPassed) {
                 if (roomId && flag) {
                     console.log("クリア！");
-                    console.log(submitCode(roomId, room.code));
+                    submitCode(roomId, room.code);
                     
                 }
             }
@@ -312,6 +313,25 @@ export default function GameRoom() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* ゲーム結果表示（新しいセクション）*/}
+                        {gameResult && ( // gameResult が存在する場合のみ表示
+                            <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                    ゲーム結果
+                                </h3>
+                                {gameResult.isSuccess ? (
+                                    <p className="text-green-700 text-lg">
+                                        ✨ **クリア！** 🎉<br />
+                                        クリア時間: <span className="font-bold text-2xl text-green-800">{gameResult.totalTime}</span> 秒
+                                    </p>
+                                ) : (
+                                    <p className="text-red-700 text-lg">
+                                        残念！クリアできませんでした。
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>
