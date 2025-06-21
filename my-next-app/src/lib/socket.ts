@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { useGameStore } from '../store/gameStore';
+import { useGameStore } from '@/store/gameStore';
 import io from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
-import type { GameResult, Player, Room } from '../types/game';
+import type { GameResult, Player, Room } from '@/types/game';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+// App Routerでは同じポート（3000）でSocket.IOサーバーを動作させる
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
 // モックモードの判定（本番環境でSocket.IOサーバーが利用できない場合）
 const isMockMode = process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_SOCKET_URL;
 
 export const useSocket = () => {
-    const socketRef = useRef<typeof Socket | null>(null);
+    // @ts-ignore
+    const socketRef = useRef<import('socket.io-client').Socket | null>(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const hasInitialized = useRef(false);
     const {
@@ -29,68 +30,79 @@ export const useSocket = () => {
 
         const initSocket = async () => {
             setIsConnecting(true);
-            // API Routeを呼び出してサーバー側を初期化
-            await fetch('/api/socket');
+            try {
+                // サーバー側のSocket.IOを初期化するためにAPIルートを叩く
+                await fetch('/api/socket');
 
-            // クライアント側で接続
-            socketRef.current = io({
-                path: '/api/socket_io',
-            });
+                // クライアント側でSocket.IOに接続
+                // URLを省略し、pathを正しく指定する
+                socketRef.current = io({
+                    path: '/api/socket',
+                });
 
-            const socket = socketRef.current;
+                const socket = socketRef.current;
 
-            socket.on('connect', () => {
-                setConnected(true);
-                setIsConnecting(false);
-            });
+                socket.on('connect', () => {
+                    console.log('✅ Socket connected:', socket.id);
+                    setConnected(true);
+                    setIsConnecting(false);
+                });
 
-            socket.on('connect_error', (error: Error) => {
-                console.error('Socket.IO connection error:', error);
+                socket.on('connect_error', (error: Error) => {
+                    console.error('❌ Socket.IO connection error:', error);
+                    setConnected(false);
+                    setIsConnecting(false);
+                });
+
+                socket.on('disconnect', () => {
+                    console.log('Socket disconnected');
+                    setConnected(false);
+                });
+
+                socket.on('room-joined', (data: { room: Room; playerId: string }) => {
+                    setRoom(data.room);
+                    setCurrentPlayerId(data.playerId);
+                });
+
+                socket.on('player-joined', (data: { player: Player }) => {
+                    const { room } = useGameStore.getState();
+                    if (room) {
+                        setRoom({ ...room, players: [...room.players, data.player] });
+                    }
+                });
+
+                socket.on('player-left', (data: { playerId: string }) => {
+                    const { room } = useGameStore.getState();
+                    if (room) {
+                        setRoom({ ...room, players: room.players.filter((p) => p.id !== data.playerId) });
+                    }
+                });
+
+                socket.on('code-updated', (data: { code: string }) => {
+                    updateCodeInStore(data.code);
+                });
+
+                socket.on('turn-changed', (data: { currentPlayer: Player; timeRemaining: number }) => {
+                    const { currentPlayerId } = useGameStore.getState();
+                    if (currentPlayerId) {
+                        setIsMyTurn(data.currentPlayer.id === currentPlayerId);
+                    }
+                    setTimeRemaining(data.timeRemaining);
+                });
+
+                socket.on('game-result', (data: { result: GameResult }) => {
+                    setGameResult(data.result);
+                });
+
+                socket.on('error', (data: { message: string }) => {
+                    alert(`エラー: ${data.message}`);
+                });
+
+            } catch (error) {
+                console.error('Failed to initialize socket:', error);
                 setConnected(false);
                 setIsConnecting(false);
-            });
-
-            socket.on('disconnect', () => {
-                setConnected(false);
-            });
-
-            socket.on('room-joined', (data: { room: Room; playerId: string }) => {
-                setRoom(data.room);
-                setCurrentPlayerId(data.playerId);
-            });
-
-            socket.on('player-joined', (data: { player: Player }) => {
-                const { room } = useGameStore.getState();
-                if (room) {
-                    setRoom({ ...room, players: [...room.players, data.player] });
-                }
-            });
-
-            socket.on('player-left', (data: { playerId: string }) => {
-                const { room } = useGameStore.getState();
-                if (room) {
-                    setRoom({ ...room, players: room.players.filter((p) => p.id !== data.playerId) });
-                }
-            });
-
-            socket.on('code-updated', (data: { code: string }) => {
-                updateCodeInStore(data.code);
-            });
-
-            socket.on('turn-changed', (data: { currentPlayer: Player; timeRemaining: number }) => {
-                const { currentPlayerId } = useGameStore.getState();
-                if (currentPlayerId) {
-                    setIsMyTurn(data.currentPlayer.id === currentPlayerId);
-                }
-                setTimeRemaining(data.timeRemaining);
-            });
-            socket.on('game-result', (data: { result: GameResult }) => {
-                setGameResult(data.result);
-            });
-
-            socket.on('error', (data: { message: string }) => {
-                alert(`エラー: ${data.message}`);
-            });
+            }
         };
 
         initSocket();
@@ -98,6 +110,7 @@ export const useSocket = () => {
         return () => {
             if (socketRef.current) {
                 socketRef.current.disconnect();
+                socketRef.current = null;
             }
             hasInitialized.current = false;
         };
