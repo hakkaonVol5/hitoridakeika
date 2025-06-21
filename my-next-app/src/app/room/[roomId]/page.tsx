@@ -80,7 +80,7 @@ export default function GameRoom() {
     };
 
     // コード実行
-    const handleExecuteCode = async () => {
+    const handleExecuteCode = async (flag:boolean) => {
         if (!room?.problem) return;
 
         setIsExecuting(true);
@@ -97,8 +97,10 @@ export default function GameRoom() {
             const allPassed = results.every((result) => result.passed);
 
             if (allPassed) {
-                if (roomId) {
-                    submitCode(roomId, room.code);
+                if (roomId && flag) {
+                    console.log("クリア！");
+                    console.log(submitCode(roomId, room.code));
+                    
                 }
             }
         } catch (error) {
@@ -248,7 +250,7 @@ export default function GameRoom() {
 
                             <div className="flex space-x-4">
                                 <button
-                                    onClick={handleExecuteCode}
+                                    onClick={() => handleExecuteCode(false)}
                                     disabled={isExecuting || !isMyTurn}
                                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -256,11 +258,7 @@ export default function GameRoom() {
                                 </button>
 
                                 <button
-                                    onClick={() => {
-                                        if (roomId) {
-                                            submitCode(roomId, room.code);
-                                        }
-                                    }}
+                                    onClick={() => handleExecuteCode(true)}
                                     disabled={!isMyTurn}
                                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
