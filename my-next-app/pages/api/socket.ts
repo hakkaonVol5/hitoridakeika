@@ -68,8 +68,8 @@ const ioHandler = (req: NextApiRequest, res: NextApiResponseServerIO) => {
                 }
             });
 
-            socket.on('submit-code', ({ roomId }) => {
-                const result = submitGame(roomId);
+            socket.on('submit-code', ({ roomId, code, isSuccess }) => {
+                const result = submitGame(roomId, code, isSuccess); // submitGame に code と isSuccess を渡す
                 if (result) {
                     io.to(roomId).emit('game-result', { result });
                 }

@@ -1,31 +1,34 @@
 // my-next-app/src/lib/roomManager.js
+import { sampleProblems } from "@/data/problems";
 
 // サンプル問題データ（変更なし）
-const sampleProblems = [
-    {
-        id: 'reverse-string',
-        title: '文字列を逆順にする',
-        description: '与えられた文字列を逆順にして返す関数を作成してください。',
-        difficulty: 'easy',
-        timeLimit: 60,
-        maxPlayers: 5,
-        initialCode: `function reverseString(str) {
-  // ここにコードを書いてください。
-  // ※注意※
-  // reverseStringが自動的に実行されるので消さないようにしてください。
-  // reverseStringの引数strが元データです。
-  // reverseString関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
-  return str;
-}`,
-        testCases: [
-            { input: 'hello', expectedOutput: 'olleh' },
-            { input: 'world', expectedOutput: 'dlrow' },
-            { input: '12345', expectedOutput: '54321' },
-            { input: '', expectedOutput: '' }
-        ]
-    },
-    // ... 他の問題 ...
-];
+// const sampleProblems = [
+//     {
+//         id: 'reverse-string',
+//         title: '文字列を逆順にする',
+//         description: '与えられた文字列を逆順にして返す関数を作成してください。',
+//         difficulty: 'easy',
+//         timeLimit: 60,
+//         maxPlayers: 5,
+//         initialCode: `function reverseString(str) {
+//   // ここにコードを書いてください。
+//   // ※注意※
+//   // reverseStringが自動的に実行されるので消さないようにしてください。
+//   // reverseStringの引数strが元データです。
+//   // reverseString関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
+//   return str;
+// }`,
+//         testCases: [
+//             { input: 'hello', expectedOutput: 'olleh' },
+//             { input: 'world', expectedOutput: 'dlrow' },
+//             { input: '12345', expectedOutput: '54321' },
+//             { input: '', expectedOutput: '' }
+//         ]
+//     },
+//     // ... 他の問題 ...
+// ];
+
+
 
 const rooms = new Map();
 const playerRooms = new Map();
@@ -125,14 +128,15 @@ export const updateCode = (roomId, code) => {
     return room;
 };
 
-export const submitGame = (roomId) => {
+export const submitGame = (roomId, submittedCode, isSuccess) => {
+    console.log("いすさくせす"+isSuccess)
     const room = getRoom(roomId);
     if (room) {
         room.isGameActive = false;
         room.endTime = new Date();
         const totalTime = Math.floor(((room.endTime - room.startTime) || 0) / 1000);
         return {
-            isSuccess: true, // 本来はテスト結果で判定
+            isSuccess: isSuccess,
             totalTime,
             turnLog: room.turnLog,
             finalCode: room.code,

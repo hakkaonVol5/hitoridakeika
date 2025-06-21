@@ -12,7 +12,7 @@ export const sampleProblems: Problem[] = [
   // ここにコードを書いてください。
   // ※注意※
   // reverseStringが自動的に実行されるので消さないようにしてください。
-  // reverseStringの引数strが元データです。
+  // reverseStringの引数strが与えられる文字列です。
   // reverseString関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
   return str;
 }`,
@@ -37,6 +37,24 @@ export const sampleProblems: Problem[] = [
                 expectedOutput: '',
                 description: '空文字列'
             }
+        ],
+        nonVisibleTestCases: [
+            {
+                input: "programming",
+                expectedOutput: "gnimmargorp"
+            },
+            {
+                input: "racecar",
+                expectedOutput: "racecar" // 回文
+            },
+            {
+                input: "A",
+                expectedOutput: "A" // 一文字
+            },
+            {
+                input: "日本",
+                expectedOutput: "本日" // 日本語文字列（文字単位で逆順）
+            },
         ]
     },
     {
@@ -48,12 +66,13 @@ export const sampleProblems: Problem[] = [
         maxPlayers: 5,
         initialCode: `function sumArray(arr) {
   // ここにコードを書いてください
+  // ※注意※
+  // sumArrayが自動的に実行されるので消さないようにしてください。
+  // sumArrayの引数arrが与えられる配列です。
+  // sumArray関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
   return 0;
 }
-
-// テスト用
-console.log(sumArray([1, 2, 3, 4, 5])); // 15 が出力されるはず
-console.log(sumArray([10, 20, 30])); // 60 が出力されるはず`,
+`,
         testCases: [
             {
                 input: '[1, 2, 3, 4, 5]',
@@ -66,14 +85,36 @@ console.log(sumArray([10, 20, 30])); // 60 が出力されるはず`,
                 description: '別の配列の合計'
             },
             {
-                input: '[]',
-                expectedOutput: '0',
-                description: '空配列'
+                input: '[1.6, 2]',
+                expectedOutput: '3.6',
+                description: '小数'
             },
             {
                 input: '[1]',
                 expectedOutput: '1',
                 description: '要素が1つの配列'
+            }
+        ],
+        nonVisibleTestCases: [
+            {
+                input: '[100, 200, 300, 400]',
+                expectedOutput: '1000'
+            },
+            {
+                input: '[-1, -2, -3]',
+                expectedOutput: '-6'
+            },
+            {
+                input: '[0, 0, 0, 0]',
+                expectedOutput: '0'
+            },
+            {
+                input: '[5, -5]',
+                expectedOutput: '0'
+            },
+            {
+                input: '[1.5, 2.5, 3.0]', // 小数点のテストケースも追加
+                expectedOutput: '7'
             }
         ]
     },
@@ -86,12 +127,13 @@ console.log(sumArray([10, 20, 30])); // 60 が出力されるはず`,
         maxPlayers: 5,
         initialCode: `function findMax(arr) {
   // ここにコードを書いてください
+  // ※注意※
+  // findMaxが自動的に実行されるので消さないようにしてください。
+  // findMaxの引数arrが与えられる配列です。
+  // findMax関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
   return 0;
 }
-
-// テスト用
-console.log(findMax([3, 7, 2, 9, 1])); // 9 が出力されるはず
-console.log(findMax([-5, -2, -10, -1])); // -1 が出力されるはず`,
+`,
         testCases: [
             {
                 input: '[3, 7, 2, 9, 1]',
@@ -112,6 +154,28 @@ console.log(findMax([-5, -2, -10, -1])); // -1 が出力されるはず`,
                 input: '[0, 0, 0]',
                 expectedOutput: '0',
                 description: '同じ値の配列'
+            }
+        ],
+        nonVisibleTestCases: [
+            {
+                input: '[100, 50, 200, 150]',
+                expectedOutput: '200'
+            },
+            {
+                input: '[-100, -50, -200, -150]',
+                expectedOutput: '-50'
+            },
+            {
+                input: '[7, 7, 7]',
+                expectedOutput: '7'
+            },
+            {
+                input: '[9999]',
+                expectedOutput: '9999'
+            },
+            {
+                input: '[0, -1, 1]',
+                expectedOutput: '1'
             }
         ]
     }

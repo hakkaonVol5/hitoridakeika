@@ -128,8 +128,8 @@ export const useSocket = () => {
         socketRef.current?.emit('update-code', { roomId, code });
     };
 
-    const submitCode = (roomId: string, code: string) => {
-        socketRef.current?.emit('submit-code', { roomId, code });
+    const submitCode = (roomId: string, code: string, isSuccess: boolean) => {
+        socketRef.current?.emit('submit-code', { roomId, code, isSuccess });
     };
 
     const completeTurn = (roomId: string, playerId: string) => {

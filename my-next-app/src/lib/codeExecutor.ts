@@ -1,8 +1,9 @@
-import { TestCase, TestResult } from '../types/game';
+import { TestCase, TestResult, CodeExecutionResult } from '../types/game';
 
 // 安全なコード実行環境（簡易版）
-export const executeCode = (code: string, testCases: TestCase[]): TestResult[] => {
+export const executeCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
         // コードを実行可能な関数に変換
@@ -81,7 +82,7 @@ export const executeCode = (code: string, testCases: TestCase[]): TestResult[] =
         }
     }
 
-    return results;
+    return {results, nonVisibleResults};
 };
 
 // コードの構文チェック
@@ -99,23 +100,24 @@ export const validateCode = (code: string): { isValid: boolean; error?: string }
 };
 
 // 特定の問題に対するコード実行
-export const executeProblemCode = (problemId: string, code: string, testCases: TestCase[]): TestResult[] => {
+export const executeProblemCode = (problemId: string, code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     // 問題固有の実行ロジック
     switch (problemId) {
         case 'reverse-string':
-            return executeReverseStringCode(code, testCases);
+            return executeReverseStringCode(code, testCases, nonVisibleTestCases);
         case 'sum-array':
-            return executeSumArrayCode(code, testCases);
+            return executeSumArrayCode(code, testCases, nonVisibleTestCases);
         case 'find-max':
-            return executeFindMaxCode(code, testCases);
+            return executeFindMaxCode(code, testCases, nonVisibleTestCases);
         default:
-            return executeCode(code, testCases);
+            return executeCode(code, testCases, nonVisibleTestCases);
     }
 };
 
 // 文字列逆順問題の実行
-const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResult[] => {
+const executeReverseStringCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
         // コードを実行可能にする
@@ -165,6 +167,24 @@ const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResu
                 });
             }
         }
+        for (const testCase of nonVisibleTestCases) {
+            try {
+                const testResult = factoryFunc(testCase);
+                nonVisibleResults.push({
+                    testCase,
+                    passed: testResult.passed,
+                    actualOutput: testResult.actualOutput,
+                    error: testResult.error
+                });
+            } catch (error) {
+                nonVisibleResults.push({
+                    testCase,
+                    passed: false,
+                    actualOutput: undefined,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
+        }
 
     } catch (error) {
         for (const testCase of testCases) {
@@ -177,12 +197,13 @@ const executeReverseStringCode = (code: string, testCases: TestCase[]): TestResu
         }
     }
 
-    return results;
+    return {results, nonVisibleResults};
 };
 
 // 配列合計問題の実行
-const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] => {
+const executeSumArrayCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
         const factoryFunc = new Function(
@@ -207,7 +228,7 @@ const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] 
           return {
             passed: false,
             actualOutput: null,
-            error: error.message
+            error: "a"
           };
         }
       }
@@ -244,12 +265,13 @@ const executeSumArrayCode = (code: string, testCases: TestCase[]): TestResult[] 
         }
     }
 
-    return results;
+    return {results, nonVisibleResults};
 };
 
 // 最大値問題の実行
-const executeFindMaxCode = (code: string, testCases: TestCase[]): TestResult[] => {
+const executeFindMaxCode = (code: string, testCases: TestCase[], nonVisibleTestCases: TestCase[]): CodeExecutionResult => {
     const results: TestResult[] = [];
+    const nonVisibleResults: TestResult[] = [];
 
     try {
         const factoryFunc = new Function(
@@ -311,5 +333,5 @@ const executeFindMaxCode = (code: string, testCases: TestCase[]): TestResult[] =
         }
     }
 
-    return results;
+    return {results, nonVisibleResults};
 }; 
