@@ -18,9 +18,11 @@ app.use(cors());
 
 const server = http.createServer(app);
 
+const VERCEL_URL_REGEX = /vercel\.app$/;
+
 const io = new Server(server, {
     cors: {
-        origin: '*', // 本番環境では特定のドメインに制限することを推奨します
+        origin: [VERCEL_URL_REGEX, "http://localhost:3000"],
         methods: ['GET', 'POST'],
     },
 });
