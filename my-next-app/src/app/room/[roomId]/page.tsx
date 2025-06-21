@@ -93,7 +93,6 @@ export default function GameRoom() {
 
         setIsExecuting(true);
         try {
-            console.log(room.problem)
             const {results, nonVisibleResults} = executeProblemCode(
                 room.problem.id,
                 room.code,
@@ -106,23 +105,26 @@ export default function GameRoom() {
             let publicPassed = 0;
             let privatePassed = 0;
 
-            // 公開テストケースの集計
-            results.forEach(result => {
-                if (result.passed) {
-                    publicPassed++;
-                }
-            });
-            setPassPublicProblemNum(publicPassed);
-            setTotalPublicProblemNum(results.length);
+            if(flag){
+                // 公開テストケースの集計
+                results.forEach(result => {
+                    if (result.passed) {
+                        publicPassed++;
+                    }
+                });
+                setPassPublicProblemNum(publicPassed);
+                setTotalPublicProblemNum(results.length);
 
-            // 非公開テストケースの集計
-            nonVisibleResults.forEach(result => {
-                if (result.passed) {
-                    privatePassed++;
-                }
-            });
-            setPassPrivateProblemNum(privatePassed);
-            setTotalPrivateProblemNum(nonVisibleResults.length);
+                // 非公開テストケースの集計
+                nonVisibleResults.forEach(result => {
+                    if (result.passed) {
+                        privatePassed++;
+                    }
+                });
+                setPassPrivateProblemNum(privatePassed);
+                setTotalPrivateProblemNum(nonVisibleResults.length);
+            }
+
 
             //見えるテストケースも見えないテストケースも全て通ったら
             const allPassed = nonVisibleResults.every((result) => result.passed) && results.every((result) => result.passed);
