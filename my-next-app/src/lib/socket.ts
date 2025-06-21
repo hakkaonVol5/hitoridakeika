@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import io from 'socket.io-client';
+import io, { Socket } from 'socket.io-client';
 import type { GameResult, Player, Room } from '@/types/game';
 
 // Socket.IOサーバーのURL（独立したサーバーに接続）
@@ -28,6 +28,7 @@ export const useSocket = () => {
 
         // 独立したサーバーに直接接続
         socketRef.current = io(SOCKET_SERVER_URL, {
+            path: '/api/socket.io',
             reconnection: true,
             reconnectionAttempts: 5,
             reconnectionDelay: 1000,
@@ -126,6 +127,22 @@ export const useSocket = () => {
         socketRef.current?.emit('turn-complete', { roomId, playerId });
     };
 
+    const onPlayerUpdate = (callback: (players: Player[]) => void) => {
+        socketRef.current?.on('room-updated', ({ room }: { room: Room }) => {
+            if (room?.players) {
+                callback(room.players);
+            }
+        });
+    };
+
+    const onGameEvent = (callback: (gameState: Room) => void) => {
+        socketRef.current?.on('room-updated', ({ room }: { room: Room }) => {
+            if (room) {
+                callback(room);
+            }
+        });
+    };
+
     return {
         socket: socketRef.current,
         isConnecting,
@@ -134,5 +151,7 @@ export const useSocket = () => {
         updateCode,
         submitCode,
         completeTurn,
+        onPlayerUpdate,
+        onGameEvent,
     };
 }; 

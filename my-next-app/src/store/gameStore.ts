@@ -23,6 +23,8 @@ interface GameState {
     updateCode: (code: string) => void;
     setGameResult: (result: GameResultType) => void;
     resetGame: () => void;
+    setPlayers: (players: PlayerType[]) => void;
+    setGameState: (gameState: RoomType) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -36,6 +38,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // アクション
     setRoom: (room: RoomType) => set({ room }),
+
+    setPlayers: (players: PlayerType[]) => set((state) => ({
+        room: state.room ? { ...state.room, players } : null
+    })),
+
+    setGameState: (gameState: RoomType) => set({ room: gameState }),
 
     setCurrentPlayerId: (playerId: string) => {
         set({ currentPlayerId: playerId });

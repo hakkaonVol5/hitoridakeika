@@ -61,7 +61,7 @@ io.on('connection', (socket) => {
 
         socket.join(roomId);
         socket.emit('room-joined', { room: updatedRoom, playerId: socket.id });
-        socket.to(roomId).emit('player-joined', { player: updatedRoom.players[updatedRoom.players.length - 1] });
+        io.to(roomId).emit('room-updated', { room: updatedRoom });
     });
 
     socket.on('manual-start-game', ({ roomId }) => {
@@ -108,12 +108,12 @@ io.on('connection', (socket) => {
         console.log(`Client disconnected: ${socket.id}`);
         const result = removePlayerFromRoom(socket.id);
         if (result && !result.roomDeleted) {
-            socket.to(result.roomId).emit('player-left', { playerId: socket.id });
+            io.to(result.roomId).emit('room-updated', { room: result.room });
         }
     });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 }); 

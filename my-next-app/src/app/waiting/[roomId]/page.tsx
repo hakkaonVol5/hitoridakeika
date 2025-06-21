@@ -13,12 +13,11 @@ export default function WaitingRoom() {
   // 安全なパラメータ取得
   const roomId = params?.roomId ?? ''
   const isHost = searchParams?.get('host') === 'true'
-  const playerName = searchParams?.get('playerName') ?? ''
+  const playerName = searchParams?.get('playerName') || ''
 
-  const { socket } = useSocket();
-  const { room } = useGameStore();
+  const { socket, leaveRoom } = useSocket();
+  const { room, setGameResult, currentPlayerId } = useGameStore();
   const players = room?.players||[];
-  const { setGameResult } = useGameStore()
 
   const handleStartGame = () => {
     if (socket && roomId && players && players.length >= 2) {
@@ -36,6 +35,15 @@ export default function WaitingRoom() {
       socket.off('game-started', handleStart)
     }
   }, [socket, roomId, router, playerName])
+
+  useEffect(() => {
+    // ページを離れるときに部屋から退出する処理
+    return () => {
+      if (roomId && currentPlayerId) {
+        leaveRoom(roomId, currentPlayerId);
+      }
+    };
+  }, [roomId, currentPlayerId, leaveRoom]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-blue-100 p-4">
