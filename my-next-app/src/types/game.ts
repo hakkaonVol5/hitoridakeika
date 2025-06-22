@@ -26,6 +26,7 @@ export interface Problem {
     maxPlayers: number;
     testCases: TestCase[];
     initialCode: string;
+    nonVisibleTestCases: TestCase[];
 }
 
 export interface TestCase {
@@ -74,3 +75,9 @@ export interface SocketEvents {
     'game-result': (data: { result: GameResult }) => void;
     'error': (data: { message: string }) => void;
 } 
+
+
+export interface CodeExecutionResult {
+    results: TestResult[];
+    nonVisibleResults: TestResult[];
+}
