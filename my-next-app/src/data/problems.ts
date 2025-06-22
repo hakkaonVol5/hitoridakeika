@@ -11,9 +11,10 @@ export const sampleProblems: Problem[] = [
         initialCode: `function reverseString(str) {
   // ここにコードを書いてください。
   // ※注意※
-  // reverseStringが自動的に実行されるので消さないようにしてください。
   // reverseStringの引数strが与えられる文字列です。
-  // reverseString関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
+  // reverseString関数の中を書き換えるだけでOKです。
+  // 自動的に実行されるので外から呼び出す必要はありません。
+  // reverseString関数の返り値が実行評価に使われます。
   return str;
 }`,
         testCases: [
@@ -133,9 +134,10 @@ export const sampleProblems: Problem[] = [
         initialCode: `function sumArray(arr) {
   // ここにコードを書いてください
   // ※注意※
-  // sumArrayが自動的に実行されるので消さないようにしてください。
   // sumArrayの引数arrが与えられる配列です。
-  // sumArray関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
+  // sumArray関数の中を書き換えるだけでOKです。
+  // 自動的に実行されるので外から呼び出す必要はありません。
+  // sumArray関数の返り値が実行評価に使われます。
   return 0;
 }
 `,
@@ -256,9 +258,10 @@ export const sampleProblems: Problem[] = [
         initialCode: `function findMax(arr) {
   // ここにコードを書いてください
   // ※注意※
-  // findMaxが自動的に実行されるので消さないようにしてください。
   // findMaxの引数arrが与えられる配列です。
-  // findMax関数の中を書き換えるだけでOKです。外から呼び出す必要はありません。
+  // findMax関数の中を書き換えるだけでOKです。
+  // 自動的に実行されるので外から呼び出す必要はありません。
+  // findMax関数の返り値が実行評価に使われます。
   return 0;
 }
 `,
