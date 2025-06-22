@@ -20,16 +20,20 @@ export default function Home() {
     if (!validatePlayerName(playerName)) return setError('プレイヤー名は1〜8文字で入力してください')
     const newRoomId = generateRoomId()
     joinRoom(newRoomId, playerName)
+
     //router.push(`/waiting/${newRoomId}?playerName=${playerName}&host=true`)
     ///room/1Q7DFC?host=true&playerName=ああ
-    router.push(`/room/${newRoomId}?host=true&playerName=${playerName}`)
+    //router.push(`/room/${newRoomId}?host=true&playerName=${playerName}`)←テスト用（強制的にゲーム画面に移る）
+
+    router.push(`/room/${newRoomId}?playerName=${playerName}&host=true`)
+
   }
 
   const handleJoinRoom = () => {
     if (!validatePlayerName(playerName)) return setError('プレイヤー名は1〜8文字で入力してください')
     if (!validateRoomId(roomId)) return setError('ルームIDは3〜8文字の英数字で入力してください')
     joinRoom(roomId, playerName)
-    router.push(`/waiting/${roomId}?playerName=${playerName}&host=false`)
+    router.push(`/room/${roomId}?playerName=${playerName}&host=false`)
   }
 
   return (
