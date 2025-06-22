@@ -1,3 +1,32 @@
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
+
+const {
+    getRoom,
+    createRoom,
+    addPlayerToRoom,
+    removePlayerFromRoom,
+    nextTurn,
+    updateCode,
+    submitGame,
+} = require('./lib/roomManager');
+
+const app = express();
+app.use(cors());
+
+const server = http.createServer(app);
+
+const VERCEL_URL_REGEX = /vercel\.app$/;
+
+const io = new Server(server, {
+    cors: {
+        origin: [VERCEL_URL_REGEX, "http://localhost:3000"],
+        methods: ['GET', 'POST'],
+    },
+});
+
 // プレイヤー管理（重複参加防止用）
 const playerRooms = new Map();
 const roomTimers = new Map(); // 各部屋のタイマーを管理
@@ -48,57 +77,57 @@ const startTurnTimer = (roomId) => {
     roomTimers.set(roomId, timerId);
 };
 
-// サンプル問題データ
-// ... existing code ...
-// ... existing code ...
-    // 最初のプレイヤーが参加したらゲーム開始
-    if (room.players.length === 1) {
-        room.isGameActive = true;
-        room.startTime = new Date();
-        startTurnTimer(roomId); // 最初のタイマーを開始
-    }
+app.get('/', (req, res) => {
+    res.send('Socket.IO Server is running');
+});
 
-    console.log(`Player ${player.name} added to room ${roomId}`);
-// ... existing code ...
-const removePlayerFromRoom = (roomId, playerId) => {
-    const room = getRoom(roomId);
-    if (!room) return null;
+io.on('connection', (socket) => {
+    console.log(`Client connected: ${socket.id}`);
 
-    const playerIndex = room.players.findIndex(p => p.id === playerId);
-    if (playerIndex === -1) return null;
+    socket.on('join-room', ({ roomId, playerName }) => {
+        let room = getRoom(roomId);
+        if (!room) {
+            room = createRoom(roomId);
+        }
 
-    const wasCurrentPlayer = playerIndex === room.currentPlayerIndex;
+        const { room: updatedRoom, error } = addPlayerToRoom(roomId, { id: socket.id, name: playerName });
 
-    room.players.splice(playerIndex, 1);
-    playerRooms.delete(playerId);
+        if (error) {
+            return socket.emit('error', { message: error });
+        }
 
-    // プレイヤーが0人になったらルーム削除
-    if (room.players.length === 0) {
-        stopTurnTimer(roomId); // タイマーを停止
-        rooms.delete(roomId);
-        console.log(`Room ${roomId} deleted (no players left)`);
-        return null;
-    }
+        // プレイヤーとルームの関連付けを保存
+        playerRooms.set(socket.id, roomId);
 
-    // 現在のプレイヤーが抜けた場合、次のプレイヤーに交代
-    if (wasCurrentPlayer) {
-        room.currentPlayerIndex %= room.players.length;
-        room.players[room.currentPlayerIndex].isCurrentTurn = true;
-        startTurnTimer(roomId); // 次のプレイヤーのタイマーを開始
-    }
+        socket.join(roomId);
+        socket.emit('room-joined', { room: updatedRoom, playerId: socket.id });
+        socket.to(roomId).emit('player-joined', { player: updatedRoom.players[updatedRoom.players.length - 1] });
 
-    return room;
-};
+        // 最初のプレイヤーが参加したらゲーム開始
+        if (updatedRoom.players.length === 1) {
+            updatedRoom.isGameActive = true;
+            updatedRoom.startTime = new Date();
+            startTurnTimer(roomId); // 最初のタイマーを開始
+        }
 
-// ... existing code ...
-// ... existing code ...
-        if (room) {
+        console.log(`Player ${playerName} added to room ${roomId}`);
+    });
+
+    socket.on('update-code', ({ roomId, code }) => {
+        updateCode(roomId, code);
+        socket.to(roomId).emit('code-updated', { code });
+    });
+
+    socket.on('submit-code', ({ roomId, code }) => {
+        const result = submitGame(roomId, code);
+        if (result.success) {
             stopTurnTimer(roomId); // ゲーム終了時にタイマーを停止
-            // ゲーム終了処理
-            room.isGameActive = false;
-            room.endTime = new Date();
-// ... existing code ...
-// ... existing code ...
+            io.to(roomId).emit('game-result', { result: result.result });
+        } else {
+            socket.emit('error', { message: result.error });
+        }
+    });
+
     // ターン完了
     socket.on('turn-complete', (data) => {
         const { roomId, playerId } = data;
@@ -122,22 +151,38 @@ const removePlayerFromRoom = (roomId, playerId) => {
 
     // 切断処理
     socket.on('disconnect', () => {
-// ... existing code ...
-// ... existing code ...
-        for (const [roomId, room] of rooms.entries()) {
-            const playerIndex = room.players.findIndex(p => p.id === socket.id);
-            if (playerIndex !== -1) {
-                const updatedRoom = removePlayerFromRoom(roomId, socket.id);
-                if (updatedRoom) {
-                    socket.to(roomId).emit('player-left', { playerId: socket.id });
-                    io.to(roomId).emit('room-updated', updatedRoom);
-                } else {
-                    // ルームが削除された場合
-                    stopTurnTimer(roomId);
+        console.log(`Client disconnected: ${socket.id}`);
+        
+        // プレイヤーが参加していたルームから削除
+        const roomId = playerRooms.get(socket.id);
+        if (roomId) {
+            const room = getRoom(roomId);
+            if (room) {
+                const playerIndex = room.players.findIndex(p => p.id === socket.id);
+                if (playerIndex !== -1) {
+                    const wasCurrentPlayer = playerIndex === room.currentPlayerIndex;
+                    const updatedRoom = removePlayerFromRoom(roomId, socket.id);
+                    
+                    if (updatedRoom) {
+                        socket.to(roomId).emit('player-left', { playerId: socket.id });
+                        io.to(roomId).emit('room-updated', updatedRoom);
+                        
+                        // 現在のプレイヤーが抜けた場合、次のプレイヤーに交代
+                        if (wasCurrentPlayer) {
+                            startTurnTimer(roomId); // 次のプレイヤーのタイマーを開始
+                        }
+                    } else {
+                        // ルームが削除された場合
+                        stopTurnTimer(roomId);
+                    }
                 }
-                break;
             }
+            playerRooms.delete(socket.id);
         }
     });
 });
-// ... existing code ... 
+
+const PORT = process.env.PORT || 3001;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
