@@ -27,7 +27,7 @@ export const useSocket = () => {
         setIsConnecting(true);
 
         // Renderサーバーに直接接続
-        socketRef.current = io( {
+        socketRef.current = io(SOCKET_SERVER_URL, {
             path: '/api/socket',
             reconnection: true,
             reconnectionAttempts: 5,
