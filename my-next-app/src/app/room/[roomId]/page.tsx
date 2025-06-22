@@ -42,6 +42,8 @@ export default function GameRoom() {
     const testResultsRef = useRef<HTMLDivElement>(null);
     // ★追加: ゲーム結果表示部分への参照 (ref)
     const gameResultRef = useRef<HTMLDivElement>(null);
+    // ★追加: コードエディタ部分への参照 (ref)
+    const codeEditorRef = useRef<HTMLDivElement>(null);
 
 
     useEffect(() => {
@@ -172,6 +174,15 @@ export default function GameRoom() {
             }, 100); // わずかな遅延
         }
     }, [gameResult]);
+    // ★追加: コンポーネント初回マウント時にコードエディタまでスクロール
+    useEffect(() => {
+        // isLoading が false になり、room が利用可能になった後でスクロール
+        // 最初のレンダリング時に一度だけ実行
+        if (!isLoading && room && codeEditorRef.current) {
+            codeEditorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [isLoading, room]); // isLoading と room が準備できたら実行
+
     // ローディング中
     if (isLoading || !room) {
         return (
@@ -274,7 +285,7 @@ export default function GameRoom() {
                         )}
 
                         {/* コードエディタ */}
-                        <div className="bg-white rounded-lg shadow-md p-6">
+                        <div ref={codeEditorRef} className="bg-white rounded-lg shadow-md p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold text-gray-800">
                                     コードエディタ
