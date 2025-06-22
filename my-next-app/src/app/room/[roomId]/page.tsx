@@ -38,6 +38,12 @@ export default function GameRoom() {
     const [connectionAttempts, setConnectionAttempts] = useState(0);
     const hasJoinedRoom = useRef(false);
 
+    // ★追加: テスト結果表示部分への参照 (ref)
+    const testResultsRef = useRef<HTMLDivElement>(null);
+    // ★追加: ゲーム結果表示部分への参照 (ref)
+    const gameResultRef = useRef<HTMLDivElement>(null);
+    // ★追加: コードエディタ部分への参照 (ref)
+    const codeEditorRef = useRef<HTMLDivElement>(null);
 
 
     useEffect(() => {
@@ -134,6 +140,17 @@ export default function GameRoom() {
                 // submitGame 関数を拡張して、allPassed の情報を受け取れるようにする必要がある
                 submitCode(roomId, room.code, allPassed); // allPassed も引数として渡す
             }
+
+
+            // ★追加: テスト結果が表示された後にスクロール
+            // setTimeout を使うことで、DOMの更新が完了してからスクロールされるようにする
+            setTimeout(() => {
+                if (testResultsRef.current) {
+                    testResultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100); // わずかな遅延
+
+
         } catch (error) {
             console.error('コード実行エラー:', error);
         } finally {
@@ -149,6 +166,22 @@ export default function GameRoom() {
             completeTurn(roomId, currentPlayerId);
         }
     };
+    // ★追加: gameResult が更新されたらゲーム結果部分にスクロール
+    useEffect(() => {
+        if (gameResult && gameResultRef.current) {
+            setTimeout(() => {
+                gameResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100); // わずかな遅延
+        }
+    }, [gameResult]);
+    // ★追加: コンポーネント初回マウント時にコードエディタまでスクロール
+    useEffect(() => {
+        // isLoading が false になり、room が利用可能になった後でスクロール
+        // 最初のレンダリング時に一度だけ実行
+        if (!isLoading && room && codeEditorRef.current) {
+            codeEditorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [isLoading, room]); // isLoading と room が準備できたら実行
 
     // ローディング中
     if (isLoading || !room) {
@@ -252,7 +285,7 @@ export default function GameRoom() {
                         )}
 
                         {/* コードエディタ */}
-                        <div className="bg-white rounded-lg shadow-md p-6">
+                        <div ref={codeEditorRef} className="bg-white rounded-lg shadow-md p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold text-gray-800">
                                     コードエディタ
@@ -300,7 +333,7 @@ export default function GameRoom() {
 
                         {/* テスト結果 */}
                         {testResults.length > 0 && (
-                            <div className="bg-white rounded-lg shadow-md p-6">
+                            <div ref={testResultsRef} className="bg-white rounded-lg shadow-md p-6">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
                                     テスト結果
                                 </h3>
