@@ -9,8 +9,8 @@ import { useGameStore } from '@/store/gameStore';
 
 export default function Home() {
   const router = useRouter()
-  const { joinRoom } = useSocket()
-  const { resetGame } = useGameStore()
+  const { joinRoom, isConnecting } = useSocket()
+  const { resetGame, isConnected } = useGameStore()
 
   const [playerName, setPlayerName] = useState('')
   const [roomId, setRoomId] = useState('')
@@ -20,14 +20,20 @@ export default function Home() {
     if (!validatePlayerName(playerName)) return setError('プレイヤー名は1〜8文字で入力してください')
     const newRoomId = generateRoomId()
     joinRoom(newRoomId, playerName)
-    router.push(`/waiting/${newRoomId}?playerName=${playerName}&host=true`)
+
+    //router.push(`/waiting/${newRoomId}?playerName=${playerName}&host=true`)
+    ///room/1Q7DFC?host=true&playerName=ああ
+    //router.push(`/room/${newRoomId}?host=true&playerName=${playerName}`)←テスト用（強制的にゲーム画面に移る）
+
+    router.push(`/room/${newRoomId}?playerName=${playerName}&host=true`)
+
   }
 
   const handleJoinRoom = () => {
     if (!validatePlayerName(playerName)) return setError('プレイヤー名は1〜8文字で入力してください')
     if (!validateRoomId(roomId)) return setError('ルームIDは3〜8文字の英数字で入力してください')
     joinRoom(roomId, playerName)
-    router.push(`/waiting/${roomId}?playerName=${playerName}&host=false`)
+    router.push(`/room/${roomId}?playerName=${playerName}&host=false`)
   }
 
   return (
@@ -73,16 +79,22 @@ export default function Home() {
           <ul className="list-disc list-inside text-sm text-gray-700">
             <li>最大5人でチームを組んでプログラミング</li>
             <li>制限時間内で交代しながらコードを書く</li>
-            <li>自分の番以外は編集不可（鬼畜要素）</li>
+            <li>自分の番以外は編集不可</li>
             <li>全テストケース通過でクリア！</li>
           </ul>
         </div>
 
-        <div className="mt-4 p-4 bg-yellow-100 text-yellow-800 text-sm rounded">
-          ⚠️ モックモード<br />
-          Socket.IOサーバーが利用できないため、モックモードで動作しています。
-          リアルタイム機能は制限されますが、基本的な機能は利用できます。
-        </div>
+        {isConnecting && (
+          <div className="mt-4 p-4 bg-blue-100 text-blue-800 text-sm rounded">
+            サーバーに接続中...
+          </div>
+        )}
+
+        {!isConnected && !isConnecting && (
+          <div className="mt-4 p-4 bg-yellow-100 text-yellow-800 text-sm rounded">
+            ⚠️ サーバーに接続できませんでした。ページを再読み込みしてください。
+          </div>
+        )}
       </div>
     </div>
   )

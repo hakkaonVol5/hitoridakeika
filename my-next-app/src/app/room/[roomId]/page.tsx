@@ -315,7 +315,7 @@ export default function GameRoom() {
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <span className="font-medium">
+                                                    <span className="font-medium text-gray-600">
                                                         テストケース {index + 1}:
                                                     </span>
                                                     <span className="ml-2 text-sm text-gray-600">
@@ -332,7 +332,7 @@ export default function GameRoom() {
                                             </div>
 
                                             {!result.passed && (
-                                                <div className="mt-2 text-sm">
+                                                <div className="mt-2 text-sm text-gray-600">
                                                     <div>期待値: {result.testCase.expectedOutput}</div>
                                                     <div>実際の値: {result.actualOutput || 'エラー'}</div>
                                                     {result.error && (
