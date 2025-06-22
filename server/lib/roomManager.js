@@ -17,7 +17,42 @@ const sampleProblems = [
             { input: '', expectedOutput: '' }
         ]
     },
-    // ... 他の問題 ...
+    {
+        id: 'sum-array',
+        title: '配列の合計を求める',
+        description: '与えられた配列の要素の合計を返す関数を作成してください。',
+        difficulty: 'easy',
+        timeLimit: 60,
+        maxPlayers: 5,
+        initialCode: `function sumArray(arr) {
+  // ここにコードを書いてください
+  return 0;
+}`,
+        testCases: [
+            { input: [1, 2, 3, 4, 5], expectedOutput: 15 },
+            { input: [10, 20, 30], expectedOutput: 60 },
+            { input: [0, 0, 0], expectedOutput: 0 },
+            { input: [], expectedOutput: 0 }
+        ]
+    },
+    {
+        id: 'find-max',
+        title: '最大値を求める',
+        description: '与えられた配列から最大値を返す関数を作成してください。',
+        difficulty: 'easy',
+        timeLimit: 60,
+        maxPlayers: 5,
+        initialCode: `function findMax(arr) {
+  // ここにコードを書いてください
+  return 0;
+}`,
+        testCases: [
+            { input: [1, 5, 3, 9, 2], expectedOutput: 9 },
+            { input: [10, 20, 30], expectedOutput: 30 },
+            { input: [-5, -10, -3], expectedOutput: -3 },
+            { input: [42], expectedOutput: 42 }
+        ]
+    }
 ];
 
 const rooms = new Map();
@@ -143,4 +178,6 @@ module.exports = {
     nextTurn,
     updateCode,
     submitGame,
+    sampleProblems,
+    rooms,
 }; 

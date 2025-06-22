@@ -3,6 +3,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import Image from 'next/image'
 import { generateRoomId, validatePlayerName, validateRoomId } from '@/lib/utils'
 import { useSocket } from '@/lib/socket'
 import { useGameStore } from '@/store/gameStore';
@@ -37,61 +38,80 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-800 to-blue-800 text-white px-4">
-      <div className="bg-white text-gray-900 p-8 rounded-lg shadow-xl w-full max-w-lg">
-        <h1 className="text-3xl font-bold mb-2 text-center">みんなで競技プログラミング</h1>
-        <p className="text-center text-gray-600 mb-6">制限時間内で交代しながらコードを完成させよう！</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#005481] to-[#19A591] text-white px-4 bg-pattern-overlay py-12">
+      <h1 className="text-4xl font-bold mb-4 text-center leading-tight">
+        <span className="text-6xl text-[#B2D6B5] font-extrabold [text-shadow:-2px_-2px_0_#005481,2px_-2px_0_#005481,-2px_2px_0_#005481,2px_2px_0_#005481,-2px_0_0_#005481,2px_0_0_#005481,0_-2px_0_#005481,0_2px_0_#005481]">みんプロ</span>
+        <br />
+        <span className="text-3xl text-white/90 drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">みんなで競技プログラミング</span>
+      </h1>
+      <p className="text-center text-lg text-white mb-10 drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">制限時間内で交代しながらコードを完成させよう！</p>
 
-        <label className="block mb-2 font-semibold">プレイヤー名</label>
-        <input
-          type="text"
-          placeholder="あなたの名前を入力"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          className="w-full px-4 py-2 mb-4 border rounded"
-        />
+      <div className="w-full max-w-5xl flex flex-row items-stretch justify-center gap-12">
+        {/* Left Column */}
+        <div className="flex-1 bg-white/10 p-10 rounded-lg border border-black/40 backdrop-blur-md">
+          <label className="block mb-3 text-xl font-semibold drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">プレイヤー名</label>
+          <input
+            type="text"
+            placeholder="あなたの名前を入力"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            className="w-full px-4 py-3 mb-5 border border-black/50 rounded bg-white/10 text-white placeholder-white/60 text-xl"
+          />
 
-        <button onClick={handleCreateRoom} className="w-full py-2 mb-2 bg-purple-400 text-white font-semibold rounded">
-          新しくルームを作成
-        </button>
-        <p className="text-center text-sm text-gray-500 mb-4">ホストとしてゲームを開始します</p>
+          <button onClick={handleCreateRoom} className="w-full py-3 mb-2 bg-[#AFC0E2] text-black font-semibold rounded text-xl hover:bg-[#9BB0D8] transition-colors">
+            新しくルームを作成
+          </button>
+          <p className="text-center text-lg text-white mb-5 drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">ホストとしてゲームを開始します</p>
 
-        <div className="border-t my-4"></div>
-        <p className="text-center text-gray-500 mb-4">または</p>
+          <div className="border-t border-black/40 my-5"></div>
+          <p className="text-center text-lg text-white/70 mb-5 drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">または</p>
 
-        <label className="block mb-2 font-semibold">ルームID</label>
-        <input
-          type="text"
-          placeholder="例: ABC123"
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
-          className="w-full px-4 py-2 mb-4 border rounded"
-        />
+          <label className="block mb-3 text-xl font-semibold drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">ルームID</label>
+          <input
+            type="text"
+            placeholder="例: ABC123"
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+            className="w-full px-4 py-3 mb-4 border border-black/50 rounded bg-white/10 text-white placeholder-white/60 text-xl"
+          />
 
-        <button onClick={handleJoinRoom} className="w-full py-2 bg-green-400 text-white font-semibold rounded">
-          ルームに参加
-        </button>
+          <button onClick={handleJoinRoom} className="w-full py-3 bg-green-400 text-black font-semibold rounded text-xl hover:bg-green-500 transition-colors">
+            ルームに参加
+          </button>
 
-        {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
-
-        <div className="mt-8 bg-gray-50 p-4 rounded">
-          <h2 className="font-bold mb-2">🎮 ゲームの遊び方</h2>
-          <ul className="list-disc list-inside text-sm text-gray-700">
-            <li>最大5人でチームを組んでプログラミング</li>
-            <li>制限時間内で交代しながらコードを書く</li>
-            <li>自分の番以外は編集不可</li>
-            <li>全テストケース通過でクリア！</li>
-          </ul>
+          {error && <p className="text-red-300 mt-5 text-lg drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">{error}</p>}
         </div>
 
+        {/* Right Column */}
+        <div className="flex-1 bg-white/10 p-10 rounded-lg border border-black/40 backdrop-blur-md flex flex-col">
+          <h2 className="text-2xl font-bold mb-4 drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">ゲームの遊び方</h2>
+          <ul className="list-disc list-inside text-xl text-white">
+            <li className="drop-shadow-[0_1px_1px_rgba(0,0,0,1)] py-2">最大5人でチームを組んでプログラミング</li>
+            <li className="drop-shadow-[0_1px_1px_rgba(0,0,0,1)] py-2">制限時間内で交代しながらコードを書く</li>
+            <li className="drop-shadow-[0_1px_1px_rgba(0,0,0,1)] py-2">自分の番以外は編集不可</li>
+            <li className="drop-shadow-[0_1px_1px_rgba(0,0,0,1)] py-2">全テストケース通過でクリア！</li>
+          </ul>
+          <div className="flex-grow flex items-center justify-center pt-8">
+            <Image
+              src="/computer-icon2.png"
+              alt="decoration icon"
+              width={300}
+              height={300}
+              className="opacity-70"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="w-full max-w-5xl mt-4">
         {isConnecting && (
-          <div className="mt-4 p-4 bg-blue-100 text-blue-800 text-sm rounded">
+          <div className="p-4 bg-blue-500/20 text-blue-200 text-lg rounded border border-blue-400/30">
             サーバーに接続中...
           </div>
         )}
 
         {!isConnected && !isConnecting && (
-          <div className="mt-4 p-4 bg-yellow-100 text-yellow-800 text-sm rounded">
+          <div className="p-4 bg-yellow-500/20 text-yellow-200 text-lg rounded border border-yellow-400/30">
             ⚠️ サーバーに接続できませんでした。ページを再読み込みしてください。
           </div>
         )}
