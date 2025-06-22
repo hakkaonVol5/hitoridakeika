@@ -49,7 +49,7 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts"
-  ],
+, "src/lib/roomManager.js"  ],
   "exclude": [
     "node_modules"
   ]
