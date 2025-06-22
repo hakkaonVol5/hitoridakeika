@@ -79,7 +79,7 @@ export default function Home() {
           <ul className="list-disc list-inside text-sm text-gray-700">
             <li>最大5人でチームを組んでプログラミング</li>
             <li>制限時間内で交代しながらコードを書く</li>
-            <li>自分の番以外は編集不可（鬼畜要素）</li>
+            <li>自分の番以外は編集不可</li>
             <li>全テストケース通過でクリア！</li>
           </ul>
         </div>
