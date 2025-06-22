@@ -24,3 +24,24 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.bg-pattern-overlay {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bg-pattern-overlay::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url('/computer-icon.png');
+  background-size: 150px 200px;
+  background-repeat: repeat;
+  opacity: 0.1;
+  transform: rotate(-30deg);
+  z-index: -1;
+}
