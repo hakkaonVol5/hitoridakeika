@@ -54,22 +54,14 @@ export const useSocket = () => {
             setConnected(false);
         });
 
-        socket.on('room-joined', (data: { room: Room; playerId: string }) => {
-            setRoom(data.room);
-            setCurrentPlayerId(data.playerId);
-        });
-
-        socket.on('player-joined', (data: { player: Player }) => {
-            const { room } = useGameStore.getState();
-            if (room) {
-                setRoom({ ...room, players: [...room.players, data.player] });
-            }
-        });
-
-        socket.on('player-left', (data: { playerId: string }) => {
-            const { room } = useGameStore.getState();
-            if (room) {
-                setRoom({ ...room, players: room.players.filter((p) => p.id !== data.playerId) });
+        socket.on('updateRoom', (data: Room) => {
+            setRoom(data);
+            const { currentPlayerId } = useGameStore.getState();
+            if (!currentPlayerId && data.players.length > 0) {
+                const myPlayer = data.players.find(p => p.id === socket.id);
+                if (myPlayer) {
+                    setCurrentPlayerId(myPlayer.id);
+                }
             }
         });
 
