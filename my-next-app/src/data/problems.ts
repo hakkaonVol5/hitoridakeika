@@ -39,6 +39,7 @@ export const sampleProblems: Problem[] = [
             }
         ],
         nonVisibleTestCases: [
+            // 既存の4個
             {
                 input: "programming",
                 expectedOutput: "gnimmargorp"
@@ -55,6 +56,71 @@ export const sampleProblems: Problem[] = [
                 input: "日本",
                 expectedOutput: "本日" // 日本語文字列（文字単位で逆順）
             },
+            // 追加する16個
+            {
+                input: "abcdefghijklmnopqrstuvwxyz",
+                expectedOutput: "zyxwvutsrqponmlkjihgfedcba"
+            },
+            {
+                input: "ZYXWVUTSRQPONMLKJIHGFEDCBA",
+                expectedOutput: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            },
+            {
+                input: "abcABC!@#",
+                expectedOutput: "#@!CBAcba"
+            },
+            {
+                input: "space test",
+                expectedOutput: "tset ecaps"
+            },
+            {
+                input: "longwordtest",
+                expectedOutput: "tsetdrowgnol"
+            },
+            {
+                input: "Madam", // 大文字小文字混合の回文
+                expectedOutput: "madaM"
+            },
+            {
+                input: "wa", // 一桁の数字
+                expectedOutput: "aw"
+            },
+            {
+                input: "HelloWorld!",
+                expectedOutput: "!dlroWolleH"
+            },
+            {
+                input: "シングル", // 日本語
+                expectedOutput: "ルグンシ"
+            },
+            {
+                input: "あいうえお", // 日本語
+                expectedOutput: "おえういあ"
+            },
+            {
+                input: "english", 
+                expectedOutput: "hsilgne"
+            },
+            {
+                input: "a", // 短い一文字
+                expectedOutput: "a"
+            },
+            {
+                input: "ab", // 短い二文字
+                expectedOutput: "ba"
+            },
+            {
+                input: "aba", // 短い回文
+                expectedOutput: "aba"
+            },
+            {
+                input: "Test", // 大文字小文字混合
+                expectedOutput: "tseT"
+            },
+            {
+                input: "unyo", 
+                expectedOutput: "oynu"
+            }
         ]
     },
     {
@@ -96,6 +162,7 @@ export const sampleProblems: Problem[] = [
             }
         ],
         nonVisibleTestCases: [
+            // 既存の5個
             {
                 input: '[100, 200, 300, 400]',
                 expectedOutput: '1000'
@@ -113,8 +180,69 @@ export const sampleProblems: Problem[] = [
                 expectedOutput: '0'
             },
             {
-                input: '[1.5, 2.5, 3.0]', // 小数点のテストケースも追加
+                input: '[1.5, 2.5, 3.0]',
                 expectedOutput: '7'
+            },
+            // 追加する15個
+            {
+                input: '[10, 10, 10, 10, 10, 10, 10, 10, 10, 10]',
+                expectedOutput: '100'
+            },
+            {
+                input: '[-10, -20, -30, -40, -50]',
+                expectedOutput: '-150'
+            },
+            {
+                input: '[100, -100, 50, -50]',
+                expectedOutput: '0'
+            },
+            {
+                input: '[0.1, 0.2, 0.3, 0.4]',
+                expectedOutput: '1'
+            },
+            {
+                input: '[100000, 200000, 300000]',
+                expectedOutput: '600000'
+            },
+            {
+                input: '[-0.5, -1.5, -2.5]',
+                expectedOutput: '-4.5'
+            },
+            {
+                input: '[0]',
+                expectedOutput: '0'
+            },
+            {
+                input: '[10.5]',
+                expectedOutput: '10.5'
+            },
+            {
+                input: '[2, 4, 6, 8, 10, 12, 14, 16, 18, 20]',
+                expectedOutput: '110'
+            },
+            {
+                input: '[-1, 1, -1, 1, -1, 1]',
+                expectedOutput: '0'
+            },
+            {
+                input: '[123, 456, 789]',
+                expectedOutput: '1368'
+            },
+            {
+                input: '[3.14, 2.71]',
+                expectedOutput: '5.85'
+            },
+            {
+                input: '[-100, 1, 99]',
+                expectedOutput: '0'
+            },
+            {
+                input: '[999999999]',
+                expectedOutput: '999999999'
+            },
+            {
+                input: '[-10, -20, 30, 40, -50]',
+                expectedOutput: '-10'
             }
         ]
     },
@@ -157,6 +285,7 @@ export const sampleProblems: Problem[] = [
             }
         ],
         nonVisibleTestCases: [
+            // 既存の5個
             {
                 input: '[100, 50, 200, 150]',
                 expectedOutput: '200'
@@ -176,6 +305,67 @@ export const sampleProblems: Problem[] = [
             {
                 input: '[0, -1, 1]',
                 expectedOutput: '1'
+            },
+            // 追加する15個
+            {
+                input: '[5, 12, 8, 3, 15, 6]',
+                expectedOutput: '15'
+            },
+            {
+                input: '[-1, -10, -3, -7, -2]',
+                expectedOutput: '-1'
+            },
+            {
+                input: '[0, 10, -5, 20, -15]',
+                expectedOutput: '20'
+            },
+            {
+                input: '[-10, 0, 10, -20, 0]',
+                expectedOutput: '10'
+            },
+            {
+                input: '[5.5, 2.1, 8.9, 3.2]',
+                expectedOutput: '8.9'
+            },
+            {
+                input: '[1000000, 1, 100, 1000]',
+                expectedOutput: '1000000'
+            },
+            {
+                input: '[-0.1, -0.01, -0.001]',
+                expectedOutput: '-0.001'
+            },
+            {
+                input: '[42]',
+                expectedOutput: '42'
+            },
+            {
+                input: '[1, 1, 2, 3, 5, 8]',
+                expectedOutput: '8'
+            },
+            {
+                input: '[-1, 0, 1]',
+                expectedOutput: '1'
+            },
+            {
+                input: '[123456789, 987654321]',
+                expectedOutput: '987654321'
+            },
+            {
+                input: '[-1, -1, -1, -1, -1]',
+                expectedOutput: '-1'
+            },
+            {
+                input: '[0.001, 0.0001, 0.01]',
+                expectedOutput: '0.01'
+            },
+            {
+                input: '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]',
+                expectedOutput: '20'
+            },
+            {
+                input: '[10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]',
+                expectedOutput: '10'
             }
         ]
     }
